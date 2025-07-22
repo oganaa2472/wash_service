@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lottie/lottie.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../bloc/auth/auth_bloc.dart';
@@ -43,7 +42,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     ));
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
+      begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _animationController,
@@ -62,16 +61,16 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   String? _validateEmailPhone(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter email or phone number';
+      return _isPhone ? 'Please enter phone number' : 'Please enter email';
     }
     
     if (_isPhone) {
       if (!RegExp(r'^\d{8}$').hasMatch(value)) {
-        return 'Please enter a valid phone number';
+        return 'Please enter a valid 8-digit phone number';
       }
     } else {
       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-        return 'Please enter a valid email';
+        return 'Please enter a valid email address';
       }
     }
     return null;
@@ -91,8 +90,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is OtpSentState) {
@@ -109,162 +110,194 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: AppColors.error,
+                backgroundColor: Colors.red,
                 behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).size.height - 100,
+                  left: 20,
+                  right: 20,
+                ),
               ),
             );
           }
         },
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 40),
-                  // Logo Animation
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: Container(
-                        height: 120,
-                        width: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: AppColors.primaryGradient,
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.local_car_wash,
-                          size: 60,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  // Title
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Text(
-                      AppConstants.appName,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Text(
-                      AppConstants.appTagline,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  // Email/Phone Toggle
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Login Method',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: size.height * 0.08),
+                    // Logo and Title Section
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.blue.withOpacity(0.2),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.local_car_wash,
+                                size: 60,
+                                color: Colors.blue,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _LoginMethodButton(
-                                  icon: Icons.email,
-                                  label: 'Email',
-                                  isSelected: !_isPhone,
-                                  onTap: () => setState(() => _isPhone = false),
-                                ),
+                            const SizedBox(height: 24),
+                            Text(
+                              AppConstants.appName,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _LoginMethodButton(
-                                  icon: Icons.phone,
-                                  label: 'Phone',
-                                  isSelected: _isPhone,
-                                  onTap: () => setState(() => _isPhone = true),
-                                ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              AppConstants.appTagline,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          CustomTextField(
-                            controller: _emailPhoneController,
-                            labelText: _isPhone ? 'Phone Number' : 'Email',
-                            hintText: _isPhone ? '8 digits' : 'example@email.com',
-                            keyboardType: _isPhone 
-                              ? TextInputType.phone 
-                              : TextInputType.emailAddress,
-                            validator: _validateEmailPhone,
-                            inputFormatters: _isPhone 
-                              ? [FilteringTextInputFormatter.digitsOnly]
-                              : null,
-                            // prefixIcon: Icon(
-                            //   _isPhone ? Icons.phone : Icons.email,
-                            //   color: AppColors.primary,
-                            // ),
-                          ),
-                        ],
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Submit Button
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        return CustomButton(
-                          onPressed: state is AuthLoading ? null : _handleSubmit,
-                          child: state is AuthLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Send Code'),
-                        );
-                      },
+                    SizedBox(height: size.height * 0.06),
+                    // Login Method Selection
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _LoginMethodButton(
+                                icon: Icons.email_outlined,
+                                label: 'Email',
+                                isSelected: !_isPhone,
+                                onTap: () => setState(() => _isPhone = false),
+                              ),
+                            ),
+                            Expanded(
+                              child: _LoginMethodButton(
+                                icon: Icons.phone_android,
+                                label: 'Phone',
+                                isSelected: _isPhone,
+                                onTap: () => setState(() => _isPhone = true),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 32),
+                    // Input Field
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _isPhone ? 'Phone Number' : 'Email Address',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            CustomTextField(
+                              controller: _emailPhoneController,
+                              hintText: _isPhone ? '8-digit phone number' : 'your.email@example.com',
+                              keyboardType: _isPhone 
+                                ? TextInputType.phone 
+                                : TextInputType.emailAddress,
+                              validator: _validateEmailPhone,
+                              inputFormatters: _isPhone 
+                                ? [FilteringTextInputFormatter.digitsOnly]
+                                : null,
+                              prefixIcon: Icon(
+                                _isPhone ? Icons.phone : Icons.email,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: size.height * 0.04),
+                    // Submit Button
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) {
+                            return CustomButton(
+                              onPressed: state is AuthLoading ? null : _handleSubmit,
+                              child: state is AuthLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    'Send Code to ${_isPhone ? 'Phone' : 'Email'}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Help Text
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Text(
+                        'We\'ll send you a verification code to confirm your identity',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -289,30 +322,33 @@ class _LoginMethodButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: isSelected ? AppColors.primary : AppColors.surfaceLight,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.grey,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 15,
               ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
