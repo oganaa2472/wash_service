@@ -9,6 +9,8 @@ import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../pages/home/home_page.dart';
+
 
 class OtpVerificationPage extends StatefulWidget {
   final String contact;
@@ -141,8 +143,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            Navigator.of(context).pushNamedAndRemoveUntil(
-              '/home',
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const HomePage(userType: UserType.customer),
+              ),
               (route) => false,
             );
           } else if (state is AuthError) {

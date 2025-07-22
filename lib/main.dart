@@ -6,7 +6,7 @@ import 'core/graphql/graphql_client.dart';
 import 'core/di/locator_service.dart';
 import 'presentation/pages/splash_screen.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
-
+import 'presentation/pages/home/home_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initHiveForFlutter();
