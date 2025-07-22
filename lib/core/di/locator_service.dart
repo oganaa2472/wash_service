@@ -7,7 +7,6 @@ import '../graphql/graphql_client.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../domain/usecases/login_usecase.dart';
 import '../../presentation/bloc/auth/auth_bloc.dart';
 
 final GetIt locator = GetIt.instance;
@@ -37,11 +36,8 @@ class LocatorService {
       () => AuthRepositoryImpl(remoteDataSource: locator()),
     );
 
-    // Use Cases
-    locator.registerLazySingleton(() => LoginUseCase(locator()));
-
     // BLoCs
-    locator.registerFactory(() => AuthBloc(loginUseCase: locator()));
+    locator.registerFactory(() => AuthBloc(authRepository: locator()));
   }
 
   static void reset() {

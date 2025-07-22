@@ -10,28 +10,114 @@ class GraphQLConfig {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('auth_token');
 
-    final HttpLink httpLink = HttpLink(AppConstants.graphqlEndpoint);
-
-    final AuthLink authLink = AuthLink(
-      getToken: () => token != null ? 'Bearer $token' : null,
+    final HttpLink httpLink = HttpLink(
+      AppConstants.graphqlEndpoint,
+      defaultHeaders: {
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/json',
+      },
     );
 
-    final Link link = authLink.concat(httpLink);
+    final AuthLink authLink = AuthLink(
+      getToken: () => token != null ? 'Bearer $token' : '',
+    );
+
+    final ErrorLink errorLink = ErrorLink(
+      onGraphQLError: (request, forward, response) {
+        debugPrint('GraphQL Error Response: $response');
+        for (final error in response.errors ?? []) {
+          debugPrint('Error: ${error.message}');
+          debugPrint('Location: ${error.locations}');
+          debugPrint('Path: ${error.path}');
+          debugPrint('Extensions: ${error.extensions}');
+        }
+        return forward(request);
+      },
+      onException: (request, forward, exception) {
+        debugPrint('Network Exception: $exception');
+        if (exception is HttpLinkServerException) {
+          debugPrint('Server Response: ${exception.response}');
+          debugPrint('Response Body: ${exception.response.body}');
+          debugPrint('Status Code: ${exception.response.statusCode}');
+        }
+        return forward(request);
+      },
+    );
+
+    final Link link = errorLink.concat(authLink).concat(httpLink);
 
     return GraphQLClient(
-      cache: GraphQLCache(store: HiveStore()),
+      cache: GraphQLCache(
+        store: HiveStore(),
+      ),
       link: link,
+      defaultPolicies: DefaultPolicies(
+        query: Policies(
+          fetch: FetchPolicy.networkOnly,
+        ),
+        mutate: Policies(
+          fetch: FetchPolicy.networkOnly,
+        ),
+        subscribe: Policies(
+          fetch: FetchPolicy.networkOnly,
+        ),
+      ),
     );
   }
 
   static ValueNotifier<GraphQLClient> initializeClient() {
-    final HttpLink httpLink = HttpLink(AppConstants.graphqlEndpoint);
+    final HttpLink httpLink = HttpLink(
+      AppConstants.graphqlEndpoint,
+      defaultHeaders: {
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/json',
+      },
+    );
 
-    return ValueNotifier(
-      GraphQLClient(
-        cache: GraphQLCache(store: HiveStore()),
-        link: httpLink,
+    final ErrorLink errorLink = ErrorLink(
+      onGraphQLError: (request, forward, response) {
+        debugPrint('GraphQL Error Response: $response');
+        for (final error in response.errors ?? []) {
+          debugPrint('Error: ${error.message}');
+          debugPrint('Location: ${error.locations}');
+          debugPrint('Path: ${error.path}');
+          debugPrint('Extensions: ${error.extensions}');
+        }
+        return forward(request);
+      },
+      onException: (request, forward, exception) {
+        debugPrint('Network Exception: $exception');
+        if (exception is HttpLinkServerException) {
+          debugPrint('Server Response: ${exception.response}');
+          debugPrint('Response Body: ${exception.response.body}');
+          debugPrint('Status Code: ${exception.response.statusCode}');
+        }
+        return forward(request);
+      },
+    );
+
+    final client = GraphQLClient(
+      cache: GraphQLCache(
+        store: HiveStore(),
+      ),
+      link: errorLink.concat(httpLink),
+      defaultPolicies: DefaultPolicies(
+        query: Policies(
+          fetch: FetchPolicy.networkOnly,
+        ),
+        mutate: Policies(
+          fetch: FetchPolicy.networkOnly,
+        ),
+        subscribe: Policies(
+          fetch: FetchPolicy.networkOnly,
+        ),
       ),
     );
+
+    return ValueNotifier(client);
   }
 } 
