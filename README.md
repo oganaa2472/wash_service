@@ -26,7 +26,6 @@ This project follows clean architecture principles with the following layers:
 - Data Layer (Models, Repository Implementations, Data Sources)
 
 ## Dependencies
-
 - flutter_bloc: State management
 - graphql_flutter: GraphQL client
 - get_it: Dependency injection
