@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../models/user_model.dart';
 import '../../core/errors/failures.dart';
@@ -7,12 +6,8 @@ import '../../core/graphql/auth_queries.dart';
 import '../../core/storage/shared_prefs_service.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<void> requestOtp({required String contact, required bool isPhone});
-  Future<UserModel> verifyOtp({
-    required String contact,
-    required String otp,
-    required bool isPhone,
-  });
+  Future<UserModel> login(String email, String password);
+  Future<UserModel> register(String name, String email, String password, String phoneNumber);
   Future<bool> logout();
   Future<UserModel> getCurrentUser();
 }
@@ -27,136 +22,65 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   });
 
   @override
-  Future<void> requestOtp({
-    required String contact,
-    required bool isPhone,
-  }) async {
+  Future<UserModel> login(String email, String password) async {
     try {
-      debugPrint('Attempting to send OTP to: $contact (isPhone: $isPhone)');
-      
-      late final QueryResult result;
-      if (!isPhone) {
-        debugPrint('Sending email OTP with mutation: ${AuthQueries.requestOtpEmail}');
-        debugPrint('Variables: {"email": "$contact"}');
-        
-        result = await client.mutate(
-          MutationOptions(
-            document: gql(AuthQueries.requestOtpEmail),
-            variables: {
-              'email': contact,
-            },
-            fetchPolicy: FetchPolicy.networkOnly,
-          ),
-        );
-      } else {
-        debugPrint('Sending phone OTP with mutation: ${AuthQueries.requestOtpPhone}');
-        debugPrint('Variables: {"phone": "$contact"}');
-        
-        result = await client.mutate(
-          MutationOptions(
-            document: gql(AuthQueries.requestOtpPhone),
-            variables: {
-              'phone': contact,
-            },
-            fetchPolicy: FetchPolicy.networkOnly,
-          ),
-        );
-      }
+      final result = await client.mutate(
+        MutationOptions(
+          document: gql(AuthQueries.login),
+          variables: {
+            'email': email,
+            'password': password,
+          },
+        ),
+      );
 
-      debugPrint('Raw GraphQL Response: ${result.data}');
-      
       if (result.hasException) {
-        debugPrint('GraphQL Errors: ${result.exception?.graphqlErrors}');
-        debugPrint('Network Error: ${result.exception?.linkException}');
-        
-        final errorMessage = result.exception?.graphqlErrors.firstOrNull?.message ??
-            result.exception?.linkException.toString() ??
-            'Failed to send OTP';
-            
-        throw ServerFailure(message: errorMessage);
+        throw ServerFailure(
+          message: result.exception?.graphqlErrors.first.message ?? 'Login failed',
+        );
       }
 
-      if (result.data == null) {
-        debugPrint('No data received from server');
-        throw ServerFailure(message: 'No response from server');
-      }
+      final token = result.data?['login']['token'] as String;
+      await prefsService.setAuthToken(token);
 
-      // Verify the response structure
-      if (isPhone) {
-        final phoneResponse = result.data!['phoneCode'];
-        if (phoneResponse == null || phoneResponse['phone'] == null) {
-          debugPrint('Invalid phone response structure: $phoneResponse');
-          throw ServerFailure(message: 'Invalid server response for phone OTP');
-        }
-      } else {
-        final emailResponse = result.data!['mailCode'];
-        if (emailResponse == null || emailResponse['mail'] == null) {
-          debugPrint('Invalid email response structure: $emailResponse');
-          throw ServerFailure(message: 'Invalid server response for email OTP');
-        }
-      }
+      final user = UserModel.fromJson(result.data?['login']['user']);
+      await prefsService.setUserData(user.toJson().toString());
 
-      debugPrint('OTP sent successfully');
-    } catch (e, stackTrace) {
-      debugPrint('Error sending OTP: $e');
-      debugPrint('Stack trace: $stackTrace');
-      if (e is ServerFailure) {
-        rethrow;
-      }
+      return user;
+    } catch (e) {
       throw ServerFailure(message: e.toString());
     }
   }
 
   @override
-  Future<UserModel> verifyOtp({
-    required String contact,
-    required String otp,
-    required bool isPhone,
-  }) async {
+  Future<UserModel> register(String name, String email, String password, String phoneNumber) async {
     try {
-      debugPrint('Verifying OTP for contact: $contact');
-      print(isPhone);
-      print(otp);
-      print(contact);
       final result = await client.mutate(
         MutationOptions(
-          document: gql(AuthQueries.verifyOtp),
+          document: gql(AuthQueries.register),
           variables: {
-            'username': contact,
-            'password': otp,
-            'types': isPhone?'phone':'email',
+            'name': name,
+            'email': email,
+            'password': password,
+            'phoneNumber': phoneNumber,
           },
-          fetchPolicy: FetchPolicy.networkOnly,
         ),
       );
 
-      debugPrint('Verify OTP Response: ${result.data}');
-
       if (result.hasException) {
-        debugPrint('GraphQL Errors: ${result.exception?.graphqlErrors}');
-        debugPrint('Network Error: ${result.exception?.linkException}');
         throw ServerFailure(
-          message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Invalid OTP',
+          message: result.exception?.graphqlErrors.first.message ?? 'Registration failed',
         );
       }
 
-      if (result.data == null || result.data!['tokenAuth'] == null) {
-        throw ServerFailure(message: 'Invalid response from server');
-      }
-
-      final token = result.data!['tokenAuth']['token'] as String;
+      final token = result.data?['register']['token'] as String;
       await prefsService.setAuthToken(token);
 
-      final user = UserModel.fromJson(result.data!['tokenAuth']['user']);
+      final user = UserModel.fromJson(result.data?['register']['user']);
       await prefsService.setUserData(user.toJson().toString());
 
       return user;
-    } catch (e, stackTrace) {
-      debugPrint('Error verifying OTP: $e');
-      debugPrint('Stack trace: $stackTrace');
-      if (e is ServerFailure) {
-        rethrow;
-      }
+    } catch (e) {
       throw ServerFailure(message: e.toString());
     }
   }
@@ -167,13 +91,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final result = await client.mutate(
         MutationOptions(
           document: gql(AuthQueries.logout),
-          fetchPolicy: FetchPolicy.networkOnly,
         ),
       );
 
       if (result.hasException) {
         throw ServerFailure(
-          message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Logout failed',
+          message: result.exception?.graphqlErrors.first.message ?? 'Logout failed',
         );
       }
 
@@ -192,17 +115,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final result = await client.query(
         QueryOptions(
           document: gql(AuthQueries.getCurrentUser),
-          fetchPolicy: FetchPolicy.networkOnly,
         ),
       );
 
       if (result.hasException) {
         throw ServerFailure(
-          message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Failed to get current user',
+          message: result.exception?.graphqlErrors.first.message ?? 'Failed to get current user',
         );
       }
 
-      final user = UserModel.fromJson(result.data!['me']);
+      final user = UserModel.fromJson(result.data?['me']);
       await prefsService.setUserData(user.toJson().toString());
       
       return user;

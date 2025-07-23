@@ -9,9 +9,9 @@ class LoginUseCase {
 
   LoginUseCase(this.repository);
 
-  // Future<Either<Failure, User>> call(LoginParams params) {
-  //   return repository.login(params.email, params.password);
-  // }
+  Future<Either<Failure, User>> call(LoginParams params) {
+    return repository.login(params.email, params.password);
+  }
 }
 
 class LoginParams extends Equatable {

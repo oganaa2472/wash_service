@@ -36,7 +36,7 @@ class HomePage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Welcome ${state.user.username}!'),
+                  Text('Welcome ${state.user.name}!'),
                   const SizedBox(height: 16),
                   const Text('Your Smart Washing Dashboard'),
                 ],

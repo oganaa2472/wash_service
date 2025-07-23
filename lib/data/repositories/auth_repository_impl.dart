@@ -10,13 +10,10 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, void>> requestOtp({
-    required String contact,
-    required bool isPhone,
-  }) async {
+  Future<Either<Failure, User>> login(String email, String password) async {
     try {
-      await remoteDataSource.requestOtp(contact: contact, isPhone: isPhone);
-      return const Right(null);
+      final user = await remoteDataSource.login(email, password);
+      return Right(user);
     } on ServerFailure catch (failure) {
       return Left(failure);
     } catch (e) {
@@ -25,17 +22,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, User>> verifyOtp({
-    required String contact,
-    required String otp,
-    required bool isPhone,
-  }) async {
+  Future<Either<Failure, User>> register(
+    String name,
+    String email,
+    String password,
+    String phoneNumber,
+  ) async {
     try {
-      final user = await remoteDataSource.verifyOtp(
-        contact: contact,
-        otp: otp,
-        isPhone: isPhone,
-      );
+      final user = await remoteDataSource.register(name, email, password, phoneNumber);
       return Right(user);
     } on ServerFailure catch (failure) {
       return Left(failure);
