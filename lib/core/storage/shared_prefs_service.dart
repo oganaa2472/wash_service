@@ -59,6 +59,12 @@ class SharedPrefsService {
     return _prefs.getBool('notifications_enabled') ?? true;
   }
 
+  // Check if user is logged in
+  bool isLoggedIn() {
+    final token = getAuthToken();
+    return token != null && token.isNotEmpty;
+  }
+
   // Clear all data
   Future<bool> clearAll() async {
     return await _prefs.clear();

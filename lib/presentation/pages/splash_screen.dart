@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../core/constants/app_constants.dart';
-import 'home_page.dart';
 import 'auth/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/storage/shared_prefs_service.dart';
+import 'home/home_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,13 +34,28 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Timer(
       Duration(seconds: AppConstants.splashScreenDuration),
       () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        );
+      checkLoginStatus();
+       
       },
     );
   }
+Future<void> checkLoginStatus() async {
+  final prefs = await SharedPreferences.getInstance();
+  final sharedPrefsService = SharedPrefsService(prefs);
 
+  bool loggedIn = sharedPrefsService.isLoggedIn();
+  if (loggedIn) {
+     Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) =>  HomePage(userType:UserType.customer)),
+        );
+    // User is logged in
+  } else {
+     Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+        );
+    // User is not logged in
+  }
+}
   @override
   void dispose() {
     _animationController.dispose();
