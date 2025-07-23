@@ -32,8 +32,8 @@ This project follows clean architecture principles with the following layers:
 - shared_preferences: Local storage
 - equatable: Value equality
 - dartz: Functional programming
-![Login Screen](screenshot/login.png)
-![Opt Screen](screenshot/opt.png)
-![Splash Screen](screenshot/splash.png)
-![Home Screen](screenshot/home.png)
-![Home Screen](screenshot/wash.png)
+![Login Screen](screenshots/login.png)
+![Opt Screen](screenshots/opt.png)
+![Splash Screen](screenshots/splash.png)
+![Home Screen](screenshots/home.png)
+![Home Screen](screenshots/wash.png)
