@@ -48,8 +48,6 @@ dependencies:
   graphql_flutter: ^5.1.2
   # Service locator
   injectable: ^2.3.2
-  # Animations
-  lottie: ^2.7.0
 
 dev_dependencies:
   flutter_test:

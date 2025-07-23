@@ -26,14 +26,10 @@ This project follows clean architecture principles with the following layers:
 - Data Layer (Models, Repository Implementations, Data Sources)
 
 ## Dependencies
+
 - flutter_bloc: State management
 - graphql_flutter: GraphQL client
 - get_it: Dependency injection
 - shared_preferences: Local storage
 - equatable: Value equality
 - dartz: Functional programming
-![Login Screen](screenshots/login.png)
-![Opt Screen](screenshots/opt.png)
-![Splash Screen](screenshots/splash.png)
-![Home Screen](screenshots/home.png)
-![Home Screen](screenshots/wash.png)
