@@ -1,39 +1,46 @@
 class AuthQueries {
-  static String login = '''
-    mutation Login(\$email: String!, \$password: String!) {
-      login(input: { email: \$email, password: \$password }) {
-        user {
+  static String requestOtpEmail = '''
+    mutation mailCode(\$email: String!) {
+      mailCode(email: \$email) {
+        __typename
+        mail {
           id
-          name
-          email
-          phoneNumber
         }
-        token
       }
     }
   ''';
 
-  static String register = '''
-    mutation Register(\$name: String!, \$email: String!, \$password: String!, \$phoneNumber: String!) {
-      register(input: {
-        name: \$name,
-        email: \$email,
+  static String requestOtpPhone = '''
+    mutation smsCode(\$phone: String!) {
+      smsCode(phone: \$phone) {
+        __typename
+        phone {
+          id
+        }
+      }
+    }
+  ''';
+
+  static String verifyOtp = '''
+    mutation tokenAuth(\$username: String!, \$password: String!, \$types: String!) {
+      tokenAuth(
+        username: \$username,
         password: \$password,
-        phoneNumber: \$phoneNumber
-      }) {
+        types: \$types
+      ) {
+        token
         user {
           id
-          name
+          username
           email
-          phoneNumber
+          phone
         }
-        token
       }
     }
   ''';
 
   static String getCurrentUser = '''
-    query GetCurrentUser {
+    query me {
       me {
         id
         name
@@ -44,7 +51,7 @@ class AuthQueries {
   ''';
 
   static String logout = '''
-    mutation Logout {
+    mutation logout {
       logout {
         success
         message

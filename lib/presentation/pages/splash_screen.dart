@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../core/constants/app_constants.dart';
 import 'home_page.dart';
+import 'auth/login_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       Duration(seconds: AppConstants.splashScreenDuration),
       () {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => const LoginPage()),
         );
       },
     );
