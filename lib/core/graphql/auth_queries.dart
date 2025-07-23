@@ -22,18 +22,18 @@ class AuthQueries {
   ''';
 
   static String verifyOtp = '''
-    mutation verifyCode(\$contact: String!, \$code: String!, \$isPhone: Boolean!) {
-      verifyCode(input: {
-        contact: \$contact,
-        code: \$code,
-        isPhone: \$isPhone
-      }) {
+    mutation tokenAuth(\$username: String!, \$password: String!, \$types: String!) {
+      tokenAuth(
+        username: \$username,
+        password: \$password,
+        types: \$types
+      ) {
         token
         user {
           id
-          name
+          username
           email
-          phoneNumber
+          phone
         }
       }
     }

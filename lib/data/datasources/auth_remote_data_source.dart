@@ -115,14 +115,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       debugPrint('Verifying OTP for contact: $contact');
-      
+      print(isPhone);
+      print(otp);
+      print(contact);
       final result = await client.mutate(
         MutationOptions(
           document: gql(AuthQueries.verifyOtp),
           variables: {
-            'contact': contact,
-            'code': otp,
-            'isPhone': isPhone,
+            'username': contact,
+            'password': otp,
+            'types': isPhone?'phone':'email',
           },
           fetchPolicy: FetchPolicy.networkOnly,
         ),
@@ -138,14 +140,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       }
 
-      if (result.data == null || result.data!['verifyCode'] == null) {
+      if (result.data == null || result.data!['tokenAuth'] == null) {
         throw ServerFailure(message: 'Invalid response from server');
       }
 
-      final token = result.data!['verifyCode']['token'] as String;
+      final token = result.data!['tokenAuth']['token'] as String;
       await prefsService.setAuthToken(token);
 
-      final user = UserModel.fromJson(result.data!['verifyCode']['user']);
+      final user = UserModel.fromJson(result.data!['tokenAuth']['user']);
       await prefsService.setUserData(user.toJson().toString());
 
       return user;
