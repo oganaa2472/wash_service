@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../widgets/custom_button.dart';
+import 'assistant_page.dart';
+import '../../../core/graphql/auth_queries.dart';
+import '../../bloc/company/company_bloc.dart';
+import '../../bloc/company/company_event.dart' as company_event;
+import '../../bloc/company/company_state.dart';
+import '../../../data/datasources/company_remote_data_source.dart';
+import '../../../data/repositories/company_repository_impl.dart';
+import '../../../domain/usecases/fetch_companies_by_category.dart' as domain_usecase;
+import 'add_company_page.dart';
+import 'edit_company_page.dart';
+import 'wash_service_page.dart';
 
 enum UserType { operator, customer }
-enum ServiceType { washService, washRepair }
+// Removed ServiceType enum
 
 class HomePage extends StatefulWidget {
   final UserType userType;
@@ -19,182 +31,499 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  int _selectedIndex = 0;
+class _HomePageState extends State<HomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) {
+        final remoteDataSource = CompanyRemoteDataSource();
+        final repository = CompanyRepositoryImpl(remoteDataSource);
+        final usecase = domain_usecase.FetchCompaniesByCategory(repository);
+        return CompanyBloc(usecase);
+      },
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF2196F3), Color(0xFF64B5F6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const AssistantPage()),
+                  );
+                },
+              ),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    widget.userType == UserType.operator
+                        ? Icons.engineering
+                        : Icons.person_outline,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.userType == UserType.operator
+                          ? 'Operator Dashboard'
+                          : 'Welcome back!',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Text(
+                      'John Doe',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    context.read<AuthBloc>().add(LogoutEvent());
+                  },
+                  icon: const Icon(Icons.logout, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 600),
+            switchInCurve: Curves.easeOutBack,
+            switchOutCurve: Curves.easeInBack,
+            child: _WashServiceView(userType: widget.userType, key: const ValueKey('washService')),
+          ),
+          floatingActionButton: widget.userType == UserType.operator
+              ? TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 800),
+                  tween: Tween(begin: 0, end: 1),
+                  builder: (context, value, child) => Transform.scale(
+                    scale: value,
+                    child: child,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AddCompanyPage()),
+                        );
+                      },
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      icon: const Icon(Icons.add, size: 24),
+                      label: const Text(
+                        'Add Company',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                    ),
+                  ),
+                )
+              : null,
+          // Removed floatingActionButton. Add/Edit buttons are now in each card.
+        ),
+      ),
+    );
+  }
+}
 
+class _WashServiceView extends StatefulWidget {
+  final UserType userType;
+  const _WashServiceView({
+    required this.userType,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<_WashServiceView> createState() => _WashServiceViewState();
+}
+
+class _WashServiceViewState extends State<_WashServiceView> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+    // Dispatch fetch event for car wash category (e.g., 10)
+    context.read<CompanyBloc>().add(company_event.FetchCompaniesByCategory(10));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: Colors.blue.shade50,
-              child: Icon(
-                widget.userType == UserType.operator
-                    ? Icons.engineering
-                    : Icons.person_outline,
-                color: Colors.blue,
-              ),
+    return BlocBuilder<CompanyBloc, CompanyState>(
+      builder: (context, state) {
+        if (state is CompanyLoading) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          );
+        }
+
+        if (state is CompanyError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  widget.userType == UserType.operator
-                      ? 'Operator Dashboard'
-                      : 'Welcome back!',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.white.withOpacity(0.7),
                 ),
-                const Text(
-                  'John Doe',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(height: 16),
+                Text(
+                  'Error:  {state.message}',
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 16,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
+          );
+        }
+
+        final companies = state is CompanyLoaded ? state.companies : [];
+
+        return Column(
+          children: [
+            // Animated Banner
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              child: Container(
+                key: const ValueKey('washBanner'),
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFB3E5FC), Color(0xFF81D4FA)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF81D4FA).withOpacity(0.25),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.local_car_wash,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Car Wash Service',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Professional car washing services',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            Expanded(
+              child: companies.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.local_car_wash_outlined,
+                            size: 80,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No car wash companies found',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Companies will appear here once added',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: companies.length,
+                      itemBuilder: (context, index) {
+                        final company = companies[index];
+                        return TweenAnimationBuilder<double>(
+                          duration: Duration(milliseconds: 600 + (index * 100)),
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          builder: (context, value, child) {
+                            return Transform.translate(
+                              offset: Offset(0, 50 * (1 - value)),
+                              child: Opacity(
+                                opacity: value,
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                            elevation: 0,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: () {},
+                              splashColor: Colors.blue.withOpacity(0.08),
+                              highlightColor: Colors.blue.withOpacity(0.03),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.blue.withOpacity(0.08),
+                                      blurRadius: 18,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            width: 72,
+                                            height: 72,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(16),
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFFB3E5FC), Color(0xFF2196F3)],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              border: Border.all(color: Colors.blue.shade100, width: 2),
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(14),
+                                              child: company.logo != null && company.logo!.isNotEmpty
+                                                  ? Image.network(
+                                                      "${AppConstants.photoEndpoint}"+company.logo!,
+                                                      width: 72,
+                                                      height: 72,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context, error, stackTrace) {
+                                                        return Center(child: Icon(Icons.local_car_wash, size: 40, color: Colors.blueAccent));
+                                                      },
+                                                    )
+                                                  : Center(child: Icon(Icons.local_car_wash, size: 40, color: Colors.blueAccent)),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 18),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  company.name,
+                                                  style: const TextStyle(
+                                                    fontSize: 19,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF1A237E),
+                                                    letterSpacing: 0.1,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.access_time, size: 16, color: Colors.blue.shade300),
+                                                    const SizedBox(width: 4),
+                                                    Text('09:00 - 20:00', style: TextStyle(color: Colors.blue.shade300, fontSize: 13)),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (widget.userType == UserType.operator)
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.shade50,
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                              child: IconButton(
+                                                icon: const Icon(Icons.edit, color: Colors.lightBlue),
+                                                tooltip: 'Засах',
+                                                onPressed: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(builder: (context) => EditCompanyPage(company: company)),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        company.address,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          color: Color(0xFF263238),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          OutlinedButton.icon(
+                                            icon: const Icon(Icons.location_on, color: Colors.blue),
+                                            label: const Text("Байршил", style: TextStyle(fontWeight: FontWeight.w600)),
+                                            style: OutlinedButton.styleFrom(
+                                              side: const BorderSide(color: Color(0xFF2196F3)),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            ),
+                                            onPressed: () {
+                                              // You can add location logic here
+                                            },
+                                          ),
+                                          ElevatedButton.icon(
+                                            icon: const Icon(Icons.info, color: Colors.white),
+                                            label: const Text("Дэлгэрэнгүй", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.blue,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                              elevation: 0,
+                                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) => WashServicePage(company: company),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.people, size: 16, color: Colors.blue.shade200),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            "${0} ажилчин",
+                                            style: TextStyle(fontSize: 13, color: Colors.blueGrey.shade400, fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
           ],
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.read<AuthBloc>().add(LogoutEvent());
-            },
-            icon: const Icon(Icons.logout, color: Colors.grey),
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.blue,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Colors.blue,
-          tabs: const [
-            Tab(text: 'Wash Service'),
-            Tab(text: 'Wash Repair'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Wash Service Tab
-          _WashServiceView(userType: widget.userType),
-          // Wash Repair Tab
-          _WashRepairView(userType: widget.userType),
-        ],
-      ),
-      bottomNavigationBar: widget.userType == UserType.customer
-          ? NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.calendar_today_outlined),
-                  selectedIcon: Icon(Icons.calendar_today),
-                  label: 'Bookings',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.notifications_outlined),
-                  selectedIcon: Icon(Icons.notifications),
-                  label: 'Notifications',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
-              ],
-            )
-          : null,
-      floatingActionButton: widget.userType == UserType.customer
-          ? FloatingActionButton.extended(
-              onPressed: () {},
-              icon: const Icon(Icons.add),
-              label: const Text('Book Service'),
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            )
-          : null,
-    );
-  }
-}
-
-class _WashServiceView extends StatelessWidget {
-  final UserType userType;
-
-  const _WashServiceView({required this.userType});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (userType == UserType.operator) ...[
-          _OperatorStatsCard(),
-          const SizedBox(height: 20),
-          _PendingRequestsList(),
-        ] else ...[
-          _ServiceOptionsGrid(),
-          const SizedBox(height: 20),
-          _RecentOrdersList(),
-        ],
-      ],
-    );
-  }
-}
-
-class _WashRepairView extends StatelessWidget {
-  final UserType userType;
-
-  const _WashRepairView({required this.userType});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (userType == UserType.operator) ...[
-          _RepairStatsCard(),
-          const SizedBox(height: 20),
-          _RepairRequestsList(),
-        ] else ...[
-          _RepairServicesGrid(),
-          const SizedBox(height: 20),
-          _RepairHistoryList(),
-        ],
-      ],
+        );
+      },
     );
   }
 }

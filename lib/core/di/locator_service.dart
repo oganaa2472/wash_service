@@ -19,6 +19,7 @@ class LocatorService {
 
     // Core Services
     locator.registerLazySingleton(() => SharedPrefsService(locator()));
+    locator.registerLazySingleton(() => GraphQLConfig());
     
     final client = await GraphQLConfig.getClient();
     locator.registerLazySingleton(() => client);

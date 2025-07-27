@@ -5,6 +5,7 @@ import 'auth/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import 'home/home_page.dart';
+import 'home/assistant_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -46,7 +47,7 @@ Future<void> checkLoginStatus() async {
   bool loggedIn = sharedPrefsService.isLoggedIn();
   if (loggedIn) {
      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) =>  HomePage(userType:UserType.customer)),
+          MaterialPageRoute(builder: (_) =>  AssistantPage()),
         );
     // User is logged in
   } else {
