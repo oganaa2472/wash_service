@@ -7,11 +7,22 @@ import 'core/di/locator_service.dart';
 import 'presentation/pages/splash_screen.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
 import 'presentation/pages/home/home_page.dart';
+import 'dart:io';
+
 void main() async {
+  HttpOverrides.global = MyHttpOverrides();
   WidgetsFlutterBinding.ensureInitialized();
   await initHiveForFlutter();
   await LocatorService.init();
   runApp(const MyApp());
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
 }
 
 class MyApp extends StatelessWidget {

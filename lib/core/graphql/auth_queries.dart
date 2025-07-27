@@ -58,4 +58,37 @@ class AuthQueries {
       }
     }
   ''';
+
+  static String getCompaniesByCategory = '''
+    query company(
+      \$searchBy: [String!]
+    ) {
+      company(searchBy: \$searchBy) {
+        id
+        name
+        logo
+        point
+        address
+        category {
+          id
+          name
+        }
+      }
+    }
+  ''';
+
+  static String createCompany = '''
+    mutation createCompany(
+      \$name: String!,
+      \$address: String!,
+      \$logo: String
+    ) {
+      createCompany(name: \$name, address: \$address, logo: \$logo) {
+        id
+        name
+        address
+        logo
+      }
+    }
+  ''';
 } 
