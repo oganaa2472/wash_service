@@ -53,6 +53,8 @@ class VersionUpdateDialog extends StatelessWidget {
           _buildVersionInfo('Current Version', currentVersion),
           const SizedBox(height: 8),
           _buildVersionInfo('Latest Version', latestVersion.version),
+          const SizedBox(height: 8),
+          _buildVersionInfo('Updated', _formatDate(latestVersion.updatedAt)),
           const SizedBox(height: 16),
           if (latestVersion.category.description.isNotEmpty) ...[
             Text(
@@ -129,5 +131,9 @@ class VersionUpdateDialog extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 } 

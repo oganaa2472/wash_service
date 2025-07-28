@@ -16,12 +16,16 @@ class _VersionCheckPageState extends State<VersionCheckPage> {
   late VersionService _versionService;
   bool _isChecking = false;
   String _currentVersion = '1.0.0';
+  String _buildNumber = '1';
+  String _packageName = '';
+  String _appName = '';
   bool _updateAvailable = false;
 
   @override
   void initState() {
     super.initState();
     _initializeVersionService();
+    _loadAppInfo();
   }
 
   void _initializeVersionService() {
@@ -29,6 +33,20 @@ class _VersionCheckPageState extends State<VersionCheckPage> {
     final repository = VersionRepositoryImpl(remoteDataSource);
     final useCase = GetApkVersion(repository);
     _versionService = VersionService(useCase);
+  }
+
+  Future<void> _loadAppInfo() async {
+    try {
+      final appInfo = await _versionService.getAppInfo();
+      setState(() {
+        _currentVersion = appInfo['version'] ?? '1.0.0';
+        _buildNumber = appInfo['buildNumber'] ?? '1';
+        _packageName = appInfo['packageName'] ?? '';
+        _appName = appInfo['appName'] ?? '';
+      });
+    } catch (e) {
+      print('Error loading app info: $e');
+    }
   }
 
   Future<void> _checkForUpdates() async {
@@ -129,12 +147,18 @@ class _VersionCheckPageState extends State<VersionCheckPage> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Current Version: $_currentVersion',
+              _appName.isNotEmpty ? _appName : 'MGL Smart Service',
               style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 16),
+            _buildInfoCard('Current Version', _currentVersion),
+            const SizedBox(height: 8),
+            _buildInfoCard('Build Number', _buildNumber),
+            const SizedBox(height: 8),
+            _buildInfoCard('Package Name', _packageName),
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: _isChecking ? null : _checkForUpdates,
@@ -181,6 +205,39 @@ class _VersionCheckPageState extends State<VersionCheckPage> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(String label, String value) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.blue,
+            ),
+          ),
+        ],
       ),
     );
   }
