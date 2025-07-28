@@ -50,6 +50,10 @@ dependencies:
   injectable: ^2.3.2
   # Animations
   lottie: ^2.7.0
+  # Package info
+  package_info_plus: ^4.2.0
+  # URL launcher
+  url_launcher: ^6.2.4
 
 dev_dependencies:
   flutter_test:
