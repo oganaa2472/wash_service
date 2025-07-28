@@ -6,6 +6,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/storage/shared_prefs_service.dart';
 import 'home/home_page.dart';
 import 'home/assistant_page.dart';
+import '../../core/services/version_service.dart';
+import '../../domain/usecases/get_apk_version.dart';
+import '../../domain/entities/apk_version.dart';
+import '../../data/repositories/version_repository_impl.dart';
+import '../../data/datasources/version_remote_data_source.dart';
+import '../widgets/version_update_dialog.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,10 +23,12 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _animation;
+  late VersionService _versionService;
 
   @override
   void initState() {
     super.initState();
+    _initializeVersionService();
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(seconds: AppConstants.splashAnimationDuration),
@@ -35,28 +43,79 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Timer(
       Duration(seconds: AppConstants.splashScreenDuration),
       () {
-      checkLoginStatus();
-       
+        _checkVersionAndNavigate();
       },
     );
   }
-Future<void> checkLoginStatus() async {
-  final prefs = await SharedPreferences.getInstance();
-  final sharedPrefsService = SharedPrefsService(prefs);
 
-  bool loggedIn = sharedPrefsService.isLoggedIn();
-  if (loggedIn) {
-     Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) =>  AssistantPage()),
-        );
-    // User is logged in
-  } else {
-     Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        );
-    // User is not logged in
+  void _initializeVersionService() {
+    final remoteDataSource = VersionRemoteDataSource();
+    final repository = VersionRepositoryImpl(remoteDataSource);
+    final useCase = GetApkVersion(repository);
+    _versionService = VersionService(useCase);
   }
-}
+
+  Future<void> _checkVersionAndNavigate() async {
+    try {
+      // Check for updates in the background
+      bool updateAvailable = await _versionService.isUpdateAvailable(1);
+      
+      if (updateAvailable && mounted) {
+        final latestVersion = await _versionService.getLatestVersion(1);
+        if (latestVersion != null) {
+          _showUpdateDialog(latestVersion);
+          return; // Don't navigate yet, wait for user action
+        }
+      }
+      
+      // No update available or error, proceed with normal navigation
+      _navigateToNextScreen();
+    } catch (e) {
+      print('Version check failed: $e');
+      // Proceed with navigation even if version check fails
+      _navigateToNextScreen();
+    }
+  }
+
+  void _showUpdateDialog(ApkVersion latestVersion) async {
+    final currentVersion = await _versionService.getCurrentVersion();
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => VersionUpdateDialog(
+        latestVersion: latestVersion,
+        currentVersion: currentVersion,
+        onUpdate: () {
+          Navigator.of(context).pop();
+          _versionService.launchAppStore();
+          // Still navigate to the app after launching store
+          _navigateToNextScreen();
+        },
+        onSkip: () {
+          Navigator.of(context).pop();
+          _navigateToNextScreen();
+        },
+      ),
+    );
+  }
+
+  Future<void> _navigateToNextScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final sharedPrefsService = SharedPrefsService(prefs);
+
+    bool loggedIn = sharedPrefsService.isLoggedIn();
+    if (loggedIn) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => AssistantPage()),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _animationController.dispose();

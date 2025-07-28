@@ -16,6 +16,12 @@ import '../../../domain/usecases/fetch_companies_by_category.dart' as domain_use
 import 'add_company_page.dart';
 import 'edit_company_page.dart';
 import 'wash_service_page.dart';
+import '../../../core/services/version_service.dart';
+import '../../../domain/usecases/get_apk_version.dart';
+import '../../../domain/entities/apk_version.dart';
+import '../../../data/repositories/version_repository_impl.dart';
+import '../../../data/datasources/version_remote_data_source.dart';
+import '../../widgets/version_update_dialog.dart';
 
 enum UserType { operator, customer }
 // Removed ServiceType enum
@@ -32,6 +38,62 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late VersionService _versionService;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVersionService();
+  }
+
+  void _initializeVersionService() {
+    final remoteDataSource = VersionRemoteDataSource();
+    final repository = VersionRepositoryImpl(remoteDataSource);
+    final useCase = GetApkVersion(repository);
+    _versionService = VersionService(useCase);
+  }
+
+  Future<void> _checkForUpdates() async {
+    try {
+      bool updateAvailable = await _versionService.isUpdateAvailable(1);
+      
+      if (updateAvailable && mounted) {
+        final latestVersion = await _versionService.getLatestVersion(1);
+        if (latestVersion != null) {
+          final currentVersion = await _versionService.getCurrentVersion();
+          showDialog(
+            context: context,
+            builder: (context) => VersionUpdateDialog(
+              latestVersion: latestVersion,
+              currentVersion: currentVersion,
+              onUpdate: () {
+                Navigator.of(context).pop();
+                _versionService.launchAppStore();
+              },
+              onSkip: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You are using the latest version!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to check for updates: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -113,6 +175,19 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             actions: [
+              Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    _checkForUpdates();
+                  },
+                  icon: const Icon(Icons.system_update, color: Colors.white),
+                ),
+              ),
               Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
