@@ -96,7 +96,19 @@ class AppRouter {
       GoRoute(
         path: washService,
         name: 'wash-service',
-        builder: (context, state) => const WashServicePage(),
+        builder: (context, state) {
+           final company = state.extra as Map<String, dynamic>?;
+          return WashServicePage(
+            company: company?['company'] ?? Company(
+              id: '',
+              name: '',
+              address: '',
+              logo: '',
+              point: '',
+              category: null,
+            ),
+          );
+        },
       ),
       
       // Version Check Route
