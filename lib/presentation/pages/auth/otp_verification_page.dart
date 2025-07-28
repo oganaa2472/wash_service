@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mgl_smart_service/presentation/pages/home/assistant_page.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../bloc/auth/auth_bloc.dart';
@@ -145,7 +146,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
           if (state is AuthAuthenticated) {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
-                builder: (context) => const HomePage(userType: UserType.customer),
+                // builder: (context) => const HomePage(userType: UserType.customer),
+                 builder: (context) => const AssistantPage(),
               ),
               (route) => false,
             );
@@ -230,7 +232,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
                           child: CustomTextField(
                             controller: _controllers[index],
                             focusNode: _focusNodes[index],
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.text,
                             textAlign: TextAlign.center,
                             maxLength: 1,
                             // style: const TextStyle(fontSize: 24),
