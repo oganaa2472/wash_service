@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 import '../../domain/entities/apk_version.dart';
 
 class VersionUpdateDialog extends StatelessWidget {
@@ -14,6 +16,36 @@ class VersionUpdateDialog extends StatelessWidget {
     required this.onUpdate,
     this.onSkip,
   });
+
+  /// Get current platform
+  String get platform {
+    if (kIsWeb) return 'web';
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isAndroid) return 'android';
+    return 'unknown';
+  }
+
+  /// Get platform-specific app store name
+  String getAppStoreName() {
+    if (Platform.isIOS) {
+      return 'App Store';
+    } else if (Platform.isAndroid) {
+      return 'Google Play Store';
+    } else {
+      return 'App Store';
+    }
+  }
+
+  /// Get platform-specific update message
+  String getUpdateMessage() {
+    if (Platform.isIOS) {
+      return 'A new version is available on the App Store.';
+    } else if (Platform.isAndroid) {
+      return 'A new version is available on Google Play Store.';
+    } else {
+      return 'A new version of the app is available.';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +75,7 @@ class VersionUpdateDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'A new version of the app is available.',
+            getUpdateMessage(),
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey[700],
@@ -55,6 +87,8 @@ class VersionUpdateDialog extends StatelessWidget {
           _buildVersionInfo('Latest Version', latestVersion.version),
           const SizedBox(height: 8),
           _buildVersionInfo('Updated', _formatDate(latestVersion.updatedAt)),
+          const SizedBox(height: 8),
+          _buildVersionInfo('Platform', _getPlatformDisplayName()),
           const SizedBox(height: 16),
           if (latestVersion.category.description.isNotEmpty) ...[
             Text(
@@ -94,9 +128,9 @@ class VersionUpdateDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: const Text(
-            'Update Now',
-            style: TextStyle(fontWeight: FontWeight.w600),
+          child: Text(
+            'Update on ${getAppStoreName()}',
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -135,5 +169,18 @@ class VersionUpdateDialog extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  String _getPlatformDisplayName() {
+    switch (platform) {
+      case 'ios':
+        return 'iOS';
+      case 'android':
+        return 'Android';
+      case 'web':
+        return 'Web';
+      default:
+        return 'Unknown';
+    }
   }
 } 

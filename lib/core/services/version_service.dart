@@ -1,5 +1,7 @@
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 import '../../domain/entities/apk_version.dart';
 import '../../domain/usecases/get_apk_version.dart';
 
@@ -7,6 +9,14 @@ class VersionService {
   final GetApkVersion getApkVersion;
 
   VersionService(this.getApkVersion);
+
+  /// Get current platform (iOS or Android)
+  String get platform {
+    if (kIsWeb) return 'web';
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isAndroid) return 'android';
+    return 'unknown';
+  }
 
   /// Get current app version using package_info_plus
   Future<String> getCurrentVersion() async {
@@ -28,6 +38,7 @@ class VersionService {
         'buildNumber': packageInfo.buildNumber,
         'packageName': packageInfo.packageName,
         'appName': packageInfo.appName,
+        'platform': platform,
       };
     } catch (e) {
       print('Error getting app info: $e');
@@ -36,6 +47,7 @@ class VersionService {
         'buildNumber': '1',
         'packageName': 'com.example.mgl_smart_service',
         'appName': 'MGL Smart Service',
+        'platform': platform,
       };
     }
   }
@@ -67,15 +79,25 @@ class VersionService {
     }
   }
 
-  /// Launch app store for update
+  /// Launch app store for update based on platform
   Future<void> launchAppStore() async {
     try {
       // Get the app package name
       final PackageInfo packageInfo = await PackageInfo.fromPlatform();
       final packageName = packageInfo.packageName;
       
-      // Create the app store URL
-      final url = 'https://play.google.com/store/apps/details?id=$packageName';
+      String url;
+      
+      // Create platform-specific app store URL
+      if (Platform.isIOS) {
+        // iOS App Store URL
+        url = 'https://apps.apple.com/app/id$packageName';
+      } else if (Platform.isAndroid) {
+        // Android Play Store URL
+        url = 'https://play.google.com/store/apps/details?id=$packageName';
+      } else {
+        throw Exception('Unsupported platform for app store launch');
+      }
       
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
@@ -86,6 +108,28 @@ class VersionService {
     } catch (e) {
       print('Error launching app store: $e');
       throw Exception('Failed to open app store: $e');
+    }
+  }
+
+  /// Get platform-specific app store name
+  String getAppStoreName() {
+    if (Platform.isIOS) {
+      return 'App Store';
+    } else if (Platform.isAndroid) {
+      return 'Google Play Store';
+    } else {
+      return 'App Store';
+    }
+  }
+
+  /// Get platform-specific update message
+  String getUpdateMessage() {
+    if (Platform.isIOS) {
+      return 'A new version is available on the App Store.';
+    } else if (Platform.isAndroid) {
+      return 'A new version is available on Google Play Store.';
+    } else {
+      return 'A new version is available.';
     }
   }
 
