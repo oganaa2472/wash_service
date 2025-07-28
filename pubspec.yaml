@@ -54,6 +54,8 @@ dependencies:
   package_info_plus: ^4.2.0
   # URL launcher
   url_launcher: ^6.2.4
+  # Router
+  go_router: ^13.2.0
 
 dev_dependencies:
   flutter_test:

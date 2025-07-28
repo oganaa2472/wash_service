@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../bloc/assistant/assistant_bloc.dart';
 import '../../bloc/assistant/assistant_event.dart';
 import '../../bloc/assistant/assistant_state.dart';
@@ -11,12 +12,10 @@ class AssistantPage extends StatelessWidget {
   const AssistantPage({Key? key}) : super(key: key);
 
   void _navigateToHome(BuildContext context, int tabIndex) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => HomePage(userType: UserType.customer),
-        settings: RouteSettings(arguments: tabIndex),
-      ),
-    );
+    context.go('/home', extra: {
+      'userType': UserType.customer,
+      'tabIndex': tabIndex,
+    });
   }
 
   @override
@@ -84,12 +83,10 @@ class _AssistantViewState extends State<_AssistantView> {
               title: const Text('Car Wash'),
               onTap: () {
                 Navigator.of(context).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => HomePage(userType: UserType.customer),
-                    settings: const RouteSettings(arguments: 0),
-                  ),
-                );
+                context.go('/home', extra: {
+                  'userType': UserType.customer,
+                  'tabIndex': 0,
+                });
               },
             ),
             ListTile(
@@ -97,199 +94,98 @@ class _AssistantViewState extends State<_AssistantView> {
               title: const Text('Car Repair'),
               onTap: () {
                 Navigator.of(context).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => HomePage(userType: UserType.operator),
-                    settings: const RouteSettings(arguments: 1),
-                  ),
-                );
+                context.go('/home', extra: {
+                  'userType': UserType.customer,
+                  'tabIndex': 1,
+                });
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.engineering),
+              title: const Text('Operator Mode'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.go('/home', extra: {
+                  'userType': UserType.operator,
+                  'tabIndex': 0,
+                });
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.system_update),
+              title: const Text('Version Check'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.go('/version-check');
               },
             ),
           ],
         ),
       ),
       appBar: AppBar(
-        title: const Text('Онлайн туслах'),
-        backgroundColor: Colors.blue.shade600,
-        elevation: 0,
+        title: const Text('AI Assistant'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
       ),
-      body: BlocConsumer<AssistantBloc, AssistantState>(
-        listener: (context, state) {
-          _scrollToBottom();
-        },
-        builder: (context, state) {
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
+      body: Column(
+        children: [
+          Expanded(
+            child: BlocBuilder<AssistantBloc, AssistantState>(
+              builder: (context, state) {
+                return ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  padding: const EdgeInsets.all(16),
                   itemCount: state.messages.length,
                   itemBuilder: (context, index) {
                     final message = state.messages[index];
                     final isUser = message.isUser;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        mainAxisAlignment:
-                            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          if (!isUser)
-                            CircleAvatar(
-                              backgroundColor: Colors.blue.shade100,
-                              child: const Icon(Icons.smart_toy, color: Colors.blue, size: 22),
-                              radius: 18,
-                            ),
-                          if (!isUser) const SizedBox(width: 8),
-                          Flexible(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isUser ? Colors.blue.shade400 : Colors.white,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(18),
-                                  topRight: const Radius.circular(18),
-                                  bottomLeft: Radius.circular(isUser ? 18 : 4),
-                                  bottomRight: Radius.circular(isUser ? 4 : 18),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                message.text,
-                                style: TextStyle(
-                                  color: isUser ? Colors.white : Colors.black87,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
+                    
+                    return Align(
+                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isUser ? Colors.blue : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          message.text,
+                          style: TextStyle(
+                            color: isUser ? Colors.white : Colors.black,
                           ),
-                          if (isUser) const SizedBox(width: 8),
-                          if (isUser)
-                            CircleAvatar(
-                              backgroundColor: Colors.blue.shade400,
-                              child: const Icon(Icons.person, color: Colors.white, size: 22),
-                              radius: 18,
-                            ),
-                        ],
+                        ),
                       ),
                     );
                   },
-                ),
-              ),
-              if (state.isLoading)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      const SizedBox(width: 10),
-                      CircleAvatar(
-                        backgroundColor: Colors.blue.shade100,
-                        child: const Icon(Icons.smart_toy, color: Colors.blue, size: 22),
-                        radius: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
-                child: Material(
-                  elevation: 4,
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                );
+              },
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      hintText: 'Type your message...',
+                      border: OutlineInputBorder(),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: TextField(
-                              controller: _controller,
-                              decoration: const InputDecoration(
-                                hintText: 'Мессеж бичих...',
-                                border: InputBorder.none,
-                              ),
-                              minLines: 1,
-                              maxLines: 4,
-                              onSubmitted: (_) => _sendMessage(context),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: GestureDetector(
-                            onTap: state.isLoading ? null : () => _sendMessage(context),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: state.isLoading ? Colors.grey : Colors.blue.shade600,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.blue.withOpacity(0.15),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.send, color: Colors.white, size: 22),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    onSubmitted: (_) => _sendMessage(context),
                   ),
                 ),
-              ),
-              if (state.error != null)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    state.error!,
-                    style: const TextStyle(color: Colors.red),
-                  ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => _sendMessage(context),
+                  icon: const Icon(Icons.send),
+                  color: Colors.blue,
                 ),
-            ],
-          );
-        },
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../core/constants/app_constants.dart';
 import 'auth/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/storage/shared_prefs_service.dart';
-import 'home/home_page.dart';
-import 'home/assistant_page.dart';
 import '../../core/services/version_service.dart';
 import '../../domain/usecases/get_apk_version.dart';
 import '../../domain/entities/apk_version.dart';
@@ -106,13 +105,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     bool loggedIn = sharedPrefsService.isLoggedIn();
     if (loggedIn) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => AssistantPage()),
-      );
+      context.go('/assistant');
     } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
+      context.go('/login');
     }
   }
 
