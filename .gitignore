@@ -6,12 +6,16 @@
 .pub-cache/
 .pub/
 build/
+android/.kotlin/
+ios/Podfile
 ios/Pods/
 ios/.symlinks/
 ios/Flutter/Flutter.framework/
 ios/Flutter/Flutter.podspec
 ios/Flutter/Generated.xcconfig
 ios/Flutter/ephemeral/
+macos/Flutter/
+
 macos/Flutter/ephemeral/
 
 # Android specific
@@ -53,3 +57,6 @@ macos/Flutter/ephemeral/
 *.iml
 *.iws
 .DS_Store
+pubspec.lock
+linux/flutter/
+windows/flutter/
