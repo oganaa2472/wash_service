@@ -93,11 +93,12 @@ class AppRouter {
         },
       ),
       
-      GoRoute(
-        path: washService,
-        name: 'wash-service',
-        builder: (context, state) => const WashServicePage(),
-      ),
+      // GoRoute(
+      //   path: washService,
+      //   name: 'wash-service',
+      //   // builder: (context, state) => const WashServicePage(),
+        
+      // ),
       
       // Version Check Route
       GoRoute(
