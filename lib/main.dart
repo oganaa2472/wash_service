@@ -4,9 +4,8 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/graphql/graphql_client.dart';
 import 'core/di/locator_service.dart';
-import 'presentation/pages/splash_screen.dart';
+import 'core/router/app_router.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
-import 'presentation/pages/home/home_page.dart';
 import 'dart:io';
 
 void main() async {
@@ -40,12 +39,12 @@ class MyApp extends StatelessWidget {
             create: (context) => locator<AuthBloc>(),
           ),
         ],
-        child: MaterialApp(
+        child: MaterialApp.router(
           title: 'MGL Smart Wash',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
-          home: const SplashScreen(),
+          routerConfig: AppRouter.router,
         ),
       ),
     );

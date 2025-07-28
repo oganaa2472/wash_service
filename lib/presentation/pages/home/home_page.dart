@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../bloc/auth/auth_bloc.dart';
@@ -125,9 +126,7 @@ class _HomePageState extends State<HomePage> {
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const AssistantPage()),
-                  );
+                  context.go('/assistant');
                 },
               ),
             ),
