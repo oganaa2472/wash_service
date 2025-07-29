@@ -16,7 +16,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     emit(OrderLoading());
     try {
-      final orders = await getWashCarOrders();
+      final orders = await getWashCarOrders(event.companyId);
       emit(OrderLoaded(orders));
     } catch (e) {
       emit(OrderError(e.toString()));

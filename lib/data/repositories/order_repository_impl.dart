@@ -8,9 +8,9 @@ class OrderRepositoryImpl implements OrderRepository {
   OrderRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<List<Order>> getWashCarOrders() async {
+  Future<List<Order>> getWashCarOrders(String companyId) async {
     try {
-      final orderModels = await remoteDataSource.getWashCarOrders();
+      final orderModels = await remoteDataSource.getWashCarOrders(companyId);
       return orderModels.map((model) => model.toEntity()).toList();
     } catch (e) {
       throw Exception('Failed to get wash car orders: $e');

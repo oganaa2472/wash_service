@@ -1,7 +1,7 @@
 class OrderQueries {
-  static const String getWashCarOrders = '''
+  static String getWashCarOrders(String companyId) => '''
     query WashCarOrder {
-      washCarOrder(searchBy:["organization_id=21"]) {
+      washCarOrder(searchBy:["organization_id=$companyId"]) {
         id,
         organizationId,
         carId,

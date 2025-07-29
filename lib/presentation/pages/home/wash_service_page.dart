@@ -5,13 +5,20 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/company.dart';
 import '../../../domain/entities/order.dart';
+import '../../../domain/entities/wash_service.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../bloc/order/order_bloc.dart';
 import '../../bloc/order/order_event.dart';
 import '../../bloc/order/order_state.dart';
+import '../../bloc/wash_service/wash_service_bloc.dart';
+import '../../bloc/wash_service/wash_service_event.dart';
+import '../../bloc/wash_service/wash_service_state.dart';
 import '../../../data/datasources/order_remote_data_source.dart';
 import '../../../data/repositories/order_repository_impl.dart';
+import '../../../data/datasources/wash_service_remote_data_source.dart';
+import '../../../data/repositories/wash_service_repository_impl.dart';
 import '../../../domain/usecases/get_wash_car_orders.dart';
+import '../../../domain/usecases/get_wash_services.dart';
 import '../../../core/graphql/graphql_client.dart';
 import 'home_page.dart';
 
@@ -224,7 +231,7 @@ class _WashServicePageState extends State<WashServicePage> {
         final remoteDataSource = OrderRemoteDataSource(client);
         final repository = OrderRepositoryImpl(remoteDataSource);
         final useCase = GetWashCarOrders(repository);
-        return OrderBloc(useCase)..add(const FetchWashCarOrders());
+        return OrderBloc(useCase)..add(FetchWashCarOrders(widget.company.id));
       },
       child: BlocBuilder<OrderBloc, OrderState>(
         builder: (context, state) {
@@ -266,7 +273,7 @@ class _WashServicePageState extends State<WashServicePage> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () {
-                          context.read<OrderBloc>().add(const FetchWashCarOrders());
+                          context.read<OrderBloc>().add(FetchWashCarOrders(widget.company.id));
                         },
                         child: const Text('Дахин оролдох'),
                       ),
@@ -670,56 +677,297 @@ class _WashServicePageState extends State<WashServicePage> {
   }
 
   Widget _buildServicesTab() {
+    return BlocProvider(
+      create: (context) {
+        final client = GraphQLConfig.initializeClient().value;
+        final remoteDataSource = WashServiceRemoteDataSource(client);
+        final repository = WashServiceRepositoryImpl(remoteDataSource);
+        final useCase = GetWashServices(repository);
+        return WashServiceBloc(useCase)..add(FetchWashServices(widget.company.id));
+      },
+      child: BlocBuilder<WashServiceBloc, WashServiceState>(
+        builder: (context, state) {
+          if (state is WashServiceLoading) {
+            return Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            );
+          }
+
+          if (state is WashServiceError) {
+            return Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Алдаа гарлаа',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.message,
+                        style: TextStyle(color: Colors.grey[600]),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<WashServiceBloc>().add(FetchWashServices(widget.company.id));
+                        },
+                        child: const Text('Дахин оролдох'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          if (state is WashServiceLoaded) {
+            return Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Үйлчилгээний цэс',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: state.services.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.design_services_outlined, size: 64, color: Colors.grey[400]),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Үйлчилгээ байхгүй байна',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : _buildServicesByCategory(state.services),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: Text('Үйлчилгээ уншиж байна...'),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(WashService service) {
+    // Define colors based on service category or use default
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.purple,
+      Colors.orange,
+      Colors.teal,
+      Colors.indigo,
+    ];
+    final color = colors[service.order % colors.length];
+
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      elevation: 2,
+      child: InkWell(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${service.name} сонгосон')),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(_getServiceIcon(service.category.name), color: color, size: 32),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                service.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '₮${service.price}',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            
+                const SizedBox(height: 4),
+                Text(
+                  service.category.carInfo
+                  ,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServicesByCategory(List<WashService> services) {
+    // Group services by category
+    final Map<String, List<WashService>> servicesByCategory = {};
+    
+    for (final service in services) {
+      final categoryName = service.category.name;
+      if (!servicesByCategory.containsKey(categoryName)) {
+        servicesByCategory[categoryName] = [];
+      }
+      servicesByCategory[categoryName]!.add(service);
+    }
+    
+    // Sort categories by order
+    final sortedCategories = servicesByCategory.keys.toList()
+      ..sort((a, b) {
+        final categoryA = servicesByCategory[a]!.first.category;
+        final categoryB = servicesByCategory[b]!.first.category;
+        return categoryA.order.compareTo(categoryB.order);
+      });
+    
+    return ListView.builder(
+      itemCount: sortedCategories.length,
+      itemBuilder: (context, categoryIndex) {
+        final categoryName = sortedCategories[categoryIndex];
+        final categoryServices = servicesByCategory[categoryName]!;
+        
+        // Sort services within category by order
+        categoryServices.sort((a, b) => a.order.compareTo(b.order));
+        
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Үйлчилгээний цэс',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                children: const [
-                  _ServiceCard(
-                    icon: Icons.local_car_wash,
-                    title: 'Хурдан угаалга',
-                    price: '₮15,000',
-                    color: Colors.blue,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(
+                    _getServiceIcon(categoryName),
+                    color: Colors.blue[700],
+                    size: 20,
                   ),
-                  _ServiceCard(
-                    icon: Icons.cleaning_services,
-                    title: 'Гүн цэвэрлэгээ',
-                    price: '₮25,000',
-                    color: Colors.green,
+                  const SizedBox(width: 8),
+                  Text(
+                    categoryName,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[700],
+                    ),
                   ),
-                  _ServiceCard(
-                    icon: Icons.auto_awesome,
-                    title: 'Премиум угаалга',
-                    price: '₮35,000',
-                    color: Colors.purple,
-                  ),
-                  _ServiceCard(
-                    icon: Icons.car_rental,
-                    title: 'Бүрэн үйлчилгээ',
-                    price: '₮50,000',
-                    color: Colors.orange,
+                  const Spacer(),
+                  Text(
+                    '${categoryServices.length} үйлчилгээ',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
             ),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: categoryServices.length,
+              itemBuilder: (context, serviceIndex) {
+                final service = categoryServices[serviceIndex];
+                return _buildServiceCard(service);
+              },
+            ),
+            const SizedBox(height: 16),
           ],
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  IconData _getServiceIcon(String categoryName) {
+    switch (categoryName.toLowerCase()) {
+      case 'quick wash':
+      case 'хурдан угаалга':
+        return Icons.local_car_wash;
+      case 'deep clean':
+      case 'гүн цэвэрлэгээ':
+        return Icons.cleaning_services;
+      case 'premium':
+      case 'премиум':
+        return Icons.auto_awesome;
+      case 'full service':
+      case 'бүрэн үйлчилгээ':
+        return Icons.car_rental;
+      default:
+        return Icons.design_services;
+    }
   }
 
   void _showAddOrderDialog() {

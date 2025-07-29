@@ -7,11 +7,11 @@ class OrderRemoteDataSource {
 
   OrderRemoteDataSource(this.client);
 
-  Future<List<OrderModel>> getWashCarOrders() async {
+  Future<List<OrderModel>> getWashCarOrders(String companyId) async {
     try {
       final result = await client.query(
         QueryOptions(
-          document: gql(OrderQueries.getWashCarOrders),
+          document: gql(OrderQueries.getWashCarOrders(companyId)),
           fetchPolicy: FetchPolicy.networkOnly,
         ),
       );
