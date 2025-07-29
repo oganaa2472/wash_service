@@ -56,6 +56,16 @@ dependencies:
   url_launcher: ^6.2.4
   # Router
   go_router: ^13.2.0
+  # Google Maps
+  google_maps_flutter: ^2.5.3
+  # Image Picker
+  image_picker: ^1.0.7
+  # Geolocator
+  geolocator: ^11.0.0
+  # Mask Text Input Formatter
+  mask_text_input_formatter: ^2.9.0
+  # Loading Animation Widget
+  loading_animation_widget: ^1.2.0+4
 
 dev_dependencies:
   flutter_test:

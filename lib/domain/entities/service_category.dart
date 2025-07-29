@@ -1,5 +1,5 @@
 class ServiceCategory {
-  final int id;
+  final String id;
   final String name;
 
   ServiceCategory({

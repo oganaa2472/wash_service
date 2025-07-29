@@ -1,11 +1,11 @@
 import '../../domain/entities/service_category.dart';
 
 class ServiceCategoryModel extends ServiceCategory {
-  ServiceCategoryModel({required int id, required String name}) : super(id: id, name: name);
+  ServiceCategoryModel({required String id, required String name}) : super(id: id, name: name);
 
   factory ServiceCategoryModel.fromJson(Map<String, dynamic> json) {
     return ServiceCategoryModel(
-      id: json['id'],
+      id: json['id'].toString(),
       name: json['name'],
     );
   }
