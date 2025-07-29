@@ -1,7 +1,7 @@
 class ServiceQueries {
   static String getWashServices(String companyId) => '''
     query WashService {
-      washService {
+      washService(searchBy:["organization_id=$companyId"]) {
         id
         organizationId
         name
