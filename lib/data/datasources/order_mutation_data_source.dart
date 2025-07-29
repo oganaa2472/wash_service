@@ -49,4 +49,36 @@ class OrderMutationDataSource {
       throw Exception('Failed to add order: $e');
     }
   }
+
+  Future<bool> completeOrder({
+    required String orderId,
+  }) async {
+    try {
+      final result = await client.mutate(
+        MutationOptions(
+          document: gql(OrderMutations.completeOrder(
+            orderId: orderId,
+          )),
+        ),
+      );
+
+      if (result.hasException) {
+        throw Exception(result.exception.toString());
+      }
+
+      final data = result.data;
+      if (data == null || data['completeOrder'] == null) {
+        throw Exception('Failed to complete order: No data returned');
+      }
+
+      final orderData = data['completeOrder']['order'];
+      if (orderData == null || orderData['id'] == null) {
+        throw Exception('Failed to complete order: No order data returned');
+      }
+
+      return true;
+    } catch (e) {
+      throw Exception('Failed to complete order: $e');
+    }
+  }
 } 

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/company.dart';
 import '../../../domain/entities/order.dart';
 import '../../../domain/entities/wash_service.dart';
+import '../../../domain/entities/wash_employee.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../bloc/order/order_bloc.dart';
 import '../../bloc/order/order_event.dart';
@@ -13,15 +14,23 @@ import '../../bloc/order/order_state.dart';
 import '../../bloc/wash_service/wash_service_bloc.dart';
 import '../../bloc/wash_service/wash_service_event.dart';
 import '../../bloc/wash_service/wash_service_state.dart';
+import '../../bloc/wash_employee/wash_employee_bloc.dart';
+import '../../bloc/wash_employee/wash_employee_event.dart';
+import '../../bloc/wash_employee/wash_employee_state.dart';
 import '../../../data/datasources/order_remote_data_source.dart';
 import '../../../data/repositories/order_repository_impl.dart';
 import '../../../data/datasources/wash_service_remote_data_source.dart';
 import '../../../data/repositories/wash_service_repository_impl.dart';
+import '../../../data/datasources/wash_employee_remote_data_source.dart';
+import '../../../data/repositories/wash_employee_repository_impl.dart';
 import '../../../domain/usecases/get_wash_car_orders.dart';
 import '../../../domain/usecases/get_wash_services.dart';
+import '../../../domain/usecases/get_wash_employees.dart';
+import '../../../data/datasources/order_mutation_data_source.dart';
 import '../../../core/graphql/graphql_client.dart';
 import 'home_page.dart';
 import 'add_order_page.dart';
+import 'payment_page.dart';
 
 class WashServicePage extends StatefulWidget {
   final Company company;
@@ -39,6 +48,7 @@ class _WashServicePageState extends State<WashServicePage> {
   bool isLoading = false;
   int index = 0;
   bool _loading = false;
+  int _orderBlocKey = 0; // Key to force BLoC recreation
   
   // Form controllers
   final TextEditingController numberController = TextEditingController();
@@ -99,7 +109,7 @@ class _WashServicePageState extends State<WashServicePage> {
             appBar: AppBar(
               leading: InkWell(
                 onTap: () {
-                  context.go('/home', extra: {'userType': UserType.operator});
+                  Navigator.of(context).pop();
                 },
                 child: const Icon(Icons.arrow_back, color: Colors.white),
               ),
@@ -230,8 +240,11 @@ class _WashServicePageState extends State<WashServicePage> {
   }
 
   Widget _buildOrdersTab() {
+    print('Building orders tab with key: $_orderBlocKey');
     return BlocProvider(
+      key: ValueKey(_orderBlocKey), // Use key to force recreation
       create: (context) {
+        print('Creating new OrderBloc with key: $_orderBlocKey');
         final client = GraphQLConfig.initializeClient().value;
         final remoteDataSource = OrderRemoteDataSource(client);
         final repository = OrderRepositoryImpl(remoteDataSource);
@@ -361,60 +374,113 @@ class _WashServicePageState extends State<WashServicePage> {
   }
 
   Widget _buildOrderCard(Order order) {
-    final isCompleted = order.status.toLowerCase() == 'completed';
-    final isPaid = order.paymentStatus.toLowerCase() == 'paid';
+    final isCompleted = order.paymentStatus.toLowerCase() == 'true';
+    final isPaid = order.status.toLowerCase() == 'paid';
     
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.blue.shade50,
-          child: const Icon(Icons.local_car_wash, color: Colors.blue),
-        ),
-        title: Text('Захиалга #${order.id}'),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
           children: [
-            Text('${order.selectedService.name} • ${order.carPlateNumber}'),
-            Text(
-              '₮${order.totalPrice} • ${_formatDate(order.orderDate)}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            // Leading icon
+            CircleAvatar(
+              backgroundColor: Colors.blue.shade50,
+              child: const Icon(Icons.local_car_wash, color: Colors.blue),
             ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: isCompleted ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                isCompleted ? 'Дууссан' : 'Хийгдэж байна',
-                style: TextStyle(
-                  color: isCompleted ? Colors.green : Colors.orange,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 10,
-                ),
+            const SizedBox(width: 12),
+            
+            // Main content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Захиалга #${order.id}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text('${order.selectedService.name} • ${order.carPlateNumber}'),
+                  Text(
+                    '₮${order.totalPrice} • ${_formatDate(order.orderDate)}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: isPaid ? Colors.blue.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                isPaid ? 'Төлөгдсөн' : 'Төлөгдөөгүй',
-                style: TextStyle(
-                  color: isPaid ? Colors.blue : Colors.red,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 10,
+            
+            // Trailing status and payment button
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isCompleted ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isCompleted ? 'Дууссан' : 'Хийгдэж байна',
+                    style: TextStyle(
+                      color: isCompleted ? Colors.green : Colors.orange,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 9,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isPaid ? Colors.blue.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isPaid ? 'Төлөгдсөн' : 'Төлөгдөөгүй',
+                    style: TextStyle(
+                      color: isPaid ? Colors.blue : Colors.red,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 9,
+                    ),
+                  ),
+                ),
+                if (!isPaid) ...[
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    height: 24,
+                    child: ElevatedButton(
+                      onPressed: () => _showPaymentDialog(order),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: const Size(50, 20),
+                      ),
+                      child: const Text(
+                        'Төлөх',
+                        style: TextStyle(fontSize: 9, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+                if (!isCompleted) ...[
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    height: 24,
+                    child: ElevatedButton(
+                      onPressed: () => _completeOrder(order),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: const Size(50, 20),
+                      ),
+                      child: const Text(
+                        'Дуусгах',
+                        style: TextStyle(fontSize: 9, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),
@@ -424,6 +490,87 @@ class _WashServicePageState extends State<WashServicePage> {
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showPaymentDialog(Order order) {
+    // Navigate to the new payment page
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PaymentPage(
+          totalAmount: double.parse(order.totalPrice),
+          orderId: order.id,
+          company: widget.company,
+        ),
+      ),
+    ).then((result) {
+      // If payment was successful, refresh the order list
+      if (result == true) {
+        print('Payment successful, refreshing order list...');
+        setState(() {
+          _orderBlocKey++; // Increment key to force BLoC recreation
+        });
+        print('Order list refresh triggered with key: $_orderBlocKey');
+      } else {
+        print('Payment result: $result');
+      }
+    });
+  }
+
+  void _completeOrder(Order order) async {
+    try {
+      // Show confirmation dialog
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Захиалга дуусгах'),
+          content: Text('Захиалга #${order.id} дуусгахдаа итгэлтэй байна уу?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Цуцлах'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Дуусгах'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true) {
+        // Show loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Захиалга дуусгаж байна...')),
+        );
+
+        // Complete the order
+        final client = GraphQLConfig.initializeClient().value;
+        final orderDataSource = OrderMutationDataSource(client);
+        await orderDataSource.completeOrder(orderId: order.id);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Захиалга амжилттай дууслаа'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Refresh the order list
+        print('Order completed, refreshing order list...');
+        setState(() {
+          _orderBlocKey++; // Increment key to force BLoC recreation
+        });
+        print('Order list refresh triggered with key: $_orderBlocKey');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Захиалга дуусгах үед алдаа гарлаа: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildPaymentsTab() {
@@ -615,68 +762,163 @@ class _WashServicePageState extends State<WashServicePage> {
   }
 
   Widget _buildWorkersTab() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Ажилчдын жагсаалт',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return BlocProvider(
+      create: (context) {
+        final client = GraphQLConfig.initializeClient().value;
+        final remoteDataSource = WashEmployeeRemoteDataSource(client);
+        final repository = WashEmployeeRepositoryImpl(remoteDataSource);
+        final useCase = GetWashEmployees(repository);
+        return WashEmployeeBloc(useCase)..add(FetchWashEmployees(widget.company.id));
+      },
+      child: BlocBuilder<WashEmployeeBloc, WashEmployeeState>(
+        builder: (context, state) {
+          if (state is WashEmployeeLoading) {
+            return Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: CircularProgressIndicator(),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    _showSnackBar("Ажилчин нэмэх");
-                  },
+              ),
+            );
+          }
+
+          if (state is WashEmployeeError) {
+            return Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Алдаа гарлаа',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.message,
+                        style: TextStyle(color: Colors.grey[600]),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<WashEmployeeBloc>().add(FetchWashEmployees(widget.company.id));
+                        },
+                        child: const Text('Дахин оролдох'),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: 6,
-                itemBuilder: (context, index) {
-                  final names = ['Бат', 'Болд', 'Дорж', 'Сүхээ', 'Ганбаатар', 'Энхбаатар'];
-                  final statuses = ['Идэвхтэй', 'Идэвхтэй', 'Чөлөөтэй', 'Идэвхтэй', 'Идэвхтэй', 'Чөлөөтэй'];
-                  final colors = [Colors.green, Colors.green, Colors.orange, Colors.green, Colors.green, Colors.orange];
-                  
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.blue.shade50,
-                        child: Text(
-                          names[index].substring(0, 1),
-                          style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              ),
+            );
+          }
+
+          if (state is WashEmployeeLoaded) {
+            return Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Ажилчдын жагсаалт',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                      title: Text(names[index]),
-                      subtitle: Text('${20 + index} ажил • ${DateTime.now().subtract(Duration(days: index)).day}/${DateTime.now().subtract(Duration(days: index)).month}'),
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: colors[index].withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: () {
+                            _showSnackBar("Ажилчин нэмэх");
+                          },
                         ),
-                        child: Text(
-                          statuses[index],
-                          style: TextStyle(color: colors[index], fontSize: 12),
-                        ),
-                      ),
+                      ],
                     ),
-                  );
-                },
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: state.employees.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.person_outlined, size: 64, color: Colors.grey[400]),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Ажилчин байхгүй байна',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: state.employees.length,
+                              itemBuilder: (context, index) {
+                                final employee = state.employees[index];
+                                final isActive = employee.isActive;
+                                
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: Colors.blue.shade50,
+                                      child: Text(
+                                        employee.employee.username.substring(0, 1),
+                                        style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    title: Text('${employee.employee.username} ${employee.employee.lastName}'),
+                                    subtitle: Text('${employee.employee.phone} • ${employee.skillPercentage}% ур чадвар'),
+                                    trailing: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: isActive ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        isActive ? 'Идэвхтэй' : 'Чөлөөтэй',
+                                        style: TextStyle(
+                                          color: isActive ? Colors.green : Colors.orange,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
