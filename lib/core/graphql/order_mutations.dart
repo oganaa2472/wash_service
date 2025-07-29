@@ -14,11 +14,28 @@ class OrderMutations {
         carPlateNumber: "$carPlateNumber",
         organizationId: $organizationId,
         selectedServiceId: $selectedServiceId,
+        status: "$status",
         totalPrice: "$totalPrice",
         completedAt: "$completedAt"
       }) {
         carWashOrder {
           id
+        }
+      }
+    }
+  ''';
+
+  static String completeOrder({
+    required String orderId,
+  }) => '''
+    mutation CompleteOrder {
+      completeOrder(input: {
+        orderId: $orderId
+      }) {
+        order {
+          id
+          status
+          completedAt
         }
       }
     }

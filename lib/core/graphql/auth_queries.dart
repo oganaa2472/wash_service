@@ -73,6 +73,16 @@ class AuthQueries {
           id
           name
         }
+        accounts {
+          edges {
+            node {
+              accountName
+              accountOwner
+              iban
+              account
+            }
+          }
+        }
       }
     }
   ''';
