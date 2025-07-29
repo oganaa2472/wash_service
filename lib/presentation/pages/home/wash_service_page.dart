@@ -21,6 +21,7 @@ import '../../../domain/usecases/get_wash_car_orders.dart';
 import '../../../domain/usecases/get_wash_services.dart';
 import '../../../core/graphql/graphql_client.dart';
 import 'home_page.dart';
+import 'add_order_page.dart';
 
 class WashServicePage extends StatefulWidget {
   final Company company;
@@ -172,7 +173,11 @@ class _WashServicePageState extends State<WashServicePage> {
                       child: const Icon(Icons.add, color: Colors.white),
                       backgroundColor: Color(0xFF2196F3),
                       onPressed: () {
-                        _showAddOrderDialog();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => AddOrderPage(company: widget.company),
+                          ),
+                        );
                       },
                     ),
                   )
