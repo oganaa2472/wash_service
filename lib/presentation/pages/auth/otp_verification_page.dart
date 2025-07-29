@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../bloc/auth/auth_bloc.dart';
@@ -143,12 +145,13 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (context) => const HomePage(userType: UserType.customer),
-              ),
-              (route) => false,
-            );
+            // Navigator.of(context).pushAndRemoveUntil(
+            //   MaterialPageRoute(
+            //     builder: (context) => const home,
+            //   ),
+            //   (route) => false,
+            // );
+            context.go('/home');
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -230,7 +233,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
                           child: CustomTextField(
                             controller: _controllers[index],
                             focusNode: _focusNodes[index],
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.text,
                             textAlign: TextAlign.center,
                             maxLength: 1,
                             // style: const TextStyle(fontSize: 24),
