@@ -66,6 +66,12 @@ dependencies:
   mask_text_input_formatter: ^2.9.0
   # Loading Animation Widget
   loading_animation_widget: ^1.2.0+4
+  # Internationalization
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  # Provider for state management
+  provider: ^6.1.1
 
 dev_dependencies:
   flutter_test:

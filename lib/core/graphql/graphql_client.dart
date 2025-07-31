@@ -20,9 +20,10 @@ class GraphQLConfig {
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
         'Content-Type': 'application/json',
+        'User-Agent': 'MGL-Smart-Wash-App/1.0',
       },
     );
-
+   
     final AuthLink authLink = AuthLink(
       getToken: () => token != null ? 'Bearer $token' : '',
     );
@@ -30,6 +31,8 @@ class GraphQLConfig {
     final ErrorLink errorLink = ErrorLink(
       onGraphQLError: (request, forward, response) {
         debugPrint('GraphQL Error Response: $response');
+        debugPrint('Request Operation: ${request.operation.operationName}');
+        debugPrint('Request Document: ${request.operation.document}');
         for (final error in response.errors ?? []) {
           debugPrint('Error: ${error.message}');
           debugPrint('Location: ${error.locations}');
@@ -40,10 +43,13 @@ class GraphQLConfig {
       },
       onException: (request, forward, exception) {
         debugPrint('Network Exception: $exception');
+        debugPrint('Request Operation: ${request.operation.operationName}');
+        debugPrint('Request Document: ${request.operation.document}');
         if (exception is HttpLinkServerException) {
           debugPrint('Server Response: ${exception.response}');
           debugPrint('Response Body: ${exception.response.body}');
           debugPrint('Status Code: ${exception.response.statusCode}');
+          debugPrint('Response Headers: ${exception.response.headers}');
         } 
        
         return forward(request);
@@ -88,6 +94,15 @@ class GraphQLConfig {
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
         'Content-Type': 'application/json',
+        'User-Agent': 'MGL-Smart-Wash-App/1.0',
+      },
+    );
+
+    final AuthLink authLink = AuthLink(
+      getToken: () async {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        final String? token = prefs.getString('auth_token');
+        return token != null ? 'Bearer $token' : '';
       },
     );
 
@@ -120,6 +135,7 @@ class GraphQLConfig {
     final Link link = Link.from([
       errorLink,
       timeoutLink,
+      authLink,
       httpLink,
     ]);
 

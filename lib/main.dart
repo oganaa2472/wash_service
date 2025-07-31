@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/graphql/graphql_client.dart';
 import 'core/di/locator_service.dart';
 import 'core/router/app_router.dart';
+import 'core/localization/app_localizations.dart';
+import 'core/localization/locale_provider.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
 import 'dart:io';
 
@@ -33,20 +37,30 @@ class MyApp extends StatelessWidget {
     
     return GraphQLProvider(
       client: client,
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (context) => locator<AuthBloc>(),
+              child: MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => locator<AuthBloc>(),
+            ),
+          ],
+          child: ChangeNotifierProvider(
+            create: (context) => LocaleProvider(),
+            child: Consumer<LocaleProvider>(
+              builder: (context, localeProvider, child) {
+                return MaterialApp.router(
+                  title: 'MGL Smart Wash',
+                  debugShowCheckedModeBanner: false,
+                  theme: AppTheme.light,
+                  darkTheme: AppTheme.dark,
+                  routerConfig: AppRouter.router,
+                  localizationsDelegates: AppLocalizations.localizationsDelegates,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  locale: localeProvider.locale,
+                );
+              },
+            ),
           ),
-        ],
-        child: MaterialApp.router(
-          title: 'MGL Smart Wash',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
-          routerConfig: AppRouter.router,
         ),
-      ),
     );
   }
 }

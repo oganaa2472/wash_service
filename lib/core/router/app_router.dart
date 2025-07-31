@@ -8,6 +8,7 @@ import '../../presentation/pages/home/assistant_page.dart';
 import '../../presentation/pages/home/add_company_page.dart';
 import '../../presentation/pages/home/edit_company_page.dart';
 import '../../presentation/pages/home/wash_service_page.dart';
+import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/version_check_page.dart';
 import '../../domain/entities/company.dart';
 
@@ -20,6 +21,7 @@ class AppRouter {
   static const String addCompany = '/add-company';
   static const String editCompany = '/edit-company';
   static const String washService = '/wash-service';
+  static const String settings = '/settings';
   static const String versionCheck = '/version-check';
 
   static GoRouter get router => GoRouter(
@@ -109,6 +111,13 @@ class AppRouter {
             ),
           );
         },
+      ),
+      
+      // Settings Route
+      GoRoute(
+        path: settings,
+        name: 'settings',
+        builder: (context, state) => const SettingsPage(),
       ),
       
       // Version Check Route
