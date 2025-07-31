@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../bloc/assistant/assistant_bloc.dart';
 import '../../bloc/assistant/assistant_event.dart';
 import '../../bloc/assistant/assistant_state.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/localization/locale_provider.dart';
 import 'home_page.dart';
 
 class AssistantPage extends StatelessWidget {
@@ -65,6 +68,69 @@ class _AssistantViewState extends State<_AssistantView> {
     });
   }
 
+  void _showLanguageDialog(BuildContext context, LocaleProvider localeProvider) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.language, color: Colors.blue),
+              const SizedBox(width: 8),
+              const Text(
+                'Select Language',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.flag),
+                title: const Text('English'),
+                subtitle: const Text('EN'),
+                selected: localeProvider.locale.languageCode == 'en',
+                onTap: () {
+                  localeProvider.setLanguage('en');
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Language changed to English'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.flag),
+                title: const Text('Монгол'),
+                subtitle: const Text('MN'),
+                selected: localeProvider.locale.languageCode == 'mn',
+                onTap: () {
+                  localeProvider.setLanguage('mn');
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Хэл Монгол руу өөрчлөгдлөө'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,6 +183,63 @@ class _AssistantViewState extends State<_AssistantView> {
               onTap: () {
                 Navigator.of(context).pop();
                 context.go('/version-check');
+              },
+            ),
+            const Divider(),
+            // Settings Section
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Settings',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.go('/settings');
+              },
+            ),
+            Consumer<LocaleProvider>(
+              builder: (context, localeProvider, child) {
+                return ListTile(
+                  leading: const Icon(Icons.language),
+                  title: const Text('Language'),
+                  subtitle: Text(
+                    localeProvider.locale.languageCode == 'en' ? 'English' : 'Монгол',
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _showLanguageDialog(context, localeProvider);
+                  },
+                );
+              },
+            ),
+            const Divider(),
+            // Account Section
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Account',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout'),
+              onTap: () {
+                Navigator.of(context).pop();
+                // context.read<AuthBloc>().add(LogoutEvent());
               },
             ),
           ],

@@ -120,7 +120,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
           carPlateNumber: selectedCar!.licensePlate,
           organizationId: widget.company.id,
           selectedServiceId: selectedService!.id,
-          status: 'choose washer',
+          status: 'PENDING',
           totalPrice: selectedService!.price.toString(),
           completedAt: DateTime.now().toIso8601String(),
         );
@@ -177,6 +177,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
 
     // Assign selected employees to the order
     try {
+      
       final client = GraphQLConfig.initializeClient().value;
       final employeeMutationDataSource = EmployeeMutationDataSource(client);
       

@@ -3,11 +3,14 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import '../../../domain/entities/company.dart';
 import '../../../domain/entities/order.dart';
 import '../../../domain/entities/wash_service.dart';
 import '../../../domain/entities/wash_employee.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/localization/locale_provider.dart';
 import '../../bloc/order/order_bloc.dart';
 import '../../bloc/order/order_event.dart';
 import '../../bloc/order/order_state.dart';
@@ -102,6 +105,69 @@ class _WashServicePageState extends State<WashServicePage> {
     _showSnackBar("Захиалга үүсгэх хуудас руу шилжиж байна...");
   }
 
+  void _showLanguageDialog(BuildContext context, LocaleProvider localeProvider) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.language, color: Colors.blue),
+              const SizedBox(width: 8),
+              const Text(
+                'Select Language',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.flag),
+                title: const Text('English'),
+                subtitle: const Text('EN'),
+                selected: localeProvider.locale.languageCode == 'en',
+                onTap: () {
+                  localeProvider.setLanguage('en');
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Language changed to English'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.flag),
+                title: const Text('Монгол'),
+                subtitle: const Text('MN'),
+                selected: localeProvider.locale.languageCode == 'mn',
+                onTap: () {
+                  localeProvider.setLanguage('mn');
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Хэл Монгол руу өөрчлөгдлөө'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return isLoading
@@ -127,6 +193,25 @@ class _WashServicePageState extends State<WashServicePage> {
               backgroundColor: Color(0xFF2196F3),
               centerTitle: false,
               actions: [
+                // Language Switcher
+                Consumer<LocaleProvider>(
+                  builder: (context, localeProvider, child) {
+                    return IconButton(
+                      icon: Text(
+                        localeProvider.locale.languageCode.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      tooltip: 'Change Language',
+                      onPressed: () {
+                        _showLanguageDialog(context, localeProvider);
+                      },
+                    );
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.info_outline, color: Colors.white),
                   tooltip: 'Дэлгэрэнгүй',

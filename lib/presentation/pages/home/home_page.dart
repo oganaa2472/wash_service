@@ -3,9 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/localization/locale_provider.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/floating_language_switcher.dart';
+import 'package:provider/provider.dart';
 import 'assistant_page.dart';
 import '../../../core/graphql/auth_queries.dart';
 import '../../bloc/company/company_bloc.dart';
@@ -95,6 +99,63 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _showLanguageDialog(BuildContext context, LocaleProvider localeProvider) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            AppLocalizations.of(context).translate('Select Language'),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: const Text('English'),
+                subtitle: const Text('EN'),
+                selected: localeProvider.locale.languageCode == 'en',
+                onTap: () {
+                  localeProvider.setLanguage('en');
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Language changed to English'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: const Text('Монгол'),
+                subtitle: const Text('MN'),
+                selected: localeProvider.locale.languageCode == 'mn',
+                onTap: () {
+                  localeProvider.setLanguage('mn');
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Хэл Монгол руу өөрчлөгдлөө'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -174,6 +235,11 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             actions: [
+              // Language Switcher
+             
+        
+        
+              // Update Check Button
               Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -187,6 +253,7 @@ class _HomePageState extends State<HomePage> {
                   icon: const Icon(Icons.system_update, color: Colors.white),
                 ),
               ),
+              // Logout Button
               Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -250,7 +317,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 )
-              : null,
+           :Container()
           // Removed floatingActionButton. Add/Edit buttons are now in each card.
         ),
       ),

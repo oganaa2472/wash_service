@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
@@ -110,6 +110,33 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
   void _handleSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
       final otp = _controllers.map((c) => c.text).join();
+      debugPrint('Submitting OTP: $otp');
+      debugPrint('Contact: ${widget.contact}');
+      debugPrint('Is Phone: ${widget.isPhone}');
+      
+      // Validate OTP format
+      if (otp.length != 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).pleaseEnter6DigitCode),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      
+      if (!RegExp(r'^\d{6}$').hasMatch(otp)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).pleaseEnterOnlyNumbers),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      
       context.read<AuthBloc>().add(
         VerifyOtpEvent(
           contact: widget.contact,
@@ -137,7 +164,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Verify Code'),
+        title: Text(AppLocalizations.of(context).verifyOtp),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
@@ -145,13 +172,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            // Navigator.of(context).pushAndRemoveUntil(
-            //   MaterialPageRoute(
-            //     builder: (context) => const home,
-            //   ),
-            //   (route) => false,
-            // );
-            context.go('/home');
+            context.go('/home', extra: {'userType': UserType.customer});
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -195,7 +216,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Verification Code',
+                            AppLocalizations.of(context).verificationCode,
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.bold,
@@ -203,7 +224,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'We have sent a verification code to',
+                            AppLocalizations.of(context).weHaveSentCode,
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -279,7 +300,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Verify'),
+                            : Text(AppLocalizations.of(context).verify),
                         );
                       },
                     ),
@@ -291,15 +312,15 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Didn't receive the code? ",
+                          "${AppLocalizations.of(context).didntReceiveCode} ",
                           style: TextStyle(color: AppColors.textSecondary),
                         ),
                         TextButton(
                           onPressed: _canResend ? _handleResend : null,
                           child: Text(
                             _canResend
-                              ? 'Resend'
-                              : 'Resend in ${_remainingTime}s',
+                              ? AppLocalizations.of(context).resendOtp
+                              : AppLocalizations.of(context).resendOtpIn.replaceAll('{seconds}', _remainingTime.toString()),
                             style: TextStyle(
                               color: _canResend ? AppColors.primary : AppColors.textHint,
                               fontWeight: FontWeight.bold,
