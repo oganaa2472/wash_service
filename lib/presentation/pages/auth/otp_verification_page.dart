@@ -254,7 +254,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
                           child: CustomTextField(
                             controller: _controllers[index],
                             focusNode: _focusNodes[index],
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.text,
                             textAlign: TextAlign.center,
                             maxLength: 1,
                             // style: const TextStyle(fontSize: 24),

@@ -78,7 +78,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       if (result.data == null) {
         debugPrint('No data received from server');
-        throw ServerFailure(message: 'No response from server');
+        throw const ServerFailure(message: 'No response from server');
       }
 
       // Verify the response structure
@@ -86,13 +86,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         final phoneResponse = result.data!['phoneCode'];
         if (phoneResponse == null || phoneResponse['phone'] == null) {
           debugPrint('Invalid phone response structure: $phoneResponse');
-          throw ServerFailure(message: 'Invalid server response for phone OTP');
+          throw const ServerFailure(message: 'Invalid server response for phone OTP');
         }
       } else {
         final emailResponse = result.data!['mailCode'];
         if (emailResponse == null || emailResponse['mail'] == null) {
           debugPrint('Invalid email response structure: $emailResponse');
-          throw ServerFailure(message: 'Invalid server response for email OTP');
+          throw const ServerFailure(message: 'Invalid server response for email OTP');
         }
       }
 
@@ -154,7 +154,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       if (result.data == null || result.data!['tokenAuth'] == null) {
-        throw ServerFailure(message: 'Invalid response from server');
+        throw const ServerFailure(message: 'Invalid response from server');
       }
 
       final token = result.data!['tokenAuth']['token'] as String;
