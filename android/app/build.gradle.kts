@@ -1,3 +1,18 @@
+// Импорт заавал хэрэгтэй
+import java.util.Properties
+import java.io.FileInputStream
+
+// keystore.properties файлыг ачаалж байна
+val keystoreProperties = Properties().apply {
+    val keystoreFile = rootProject.file("key.properties")
+    if (keystoreFile.exists()) {
+        load(FileInputStream(keystoreFile))
+    } else {
+        println("⚠️ key.properties файл олдсонгүй!")
+    }
+}
+
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -7,6 +22,7 @@ plugins {
 
 android {
     namespace = "mn.smart.smart_driver"
+
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -39,12 +55,13 @@ android {
         }
     }
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+        getByName("release") {
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release")
+           // proguardFiles(getFile("${project(":flutter_background_geolocation").projectDir}/proguard-rules.pro"))
+          // proguardFiles(file("${project(":flutter_background_geolocation").projectDir}/proguard-rules.pro"))
+
         }
-        
     }
 }
 

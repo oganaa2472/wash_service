@@ -1,10 +1,11 @@
+import 'package:SmartServiceMgl/core/graphql/service_queries.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mgl_smart_service/core/graphql/service_queries.dart';
+
 import 'package:provider/provider.dart';
 import '../../../domain/entities/company.dart';
 import '../../../domain/entities/order.dart';
@@ -33,7 +34,6 @@ import '../../../domain/usecases/get_wash_services.dart';
 import '../../../domain/usecases/get_wash_employees.dart';
 import '../../../data/datasources/order_mutation_data_source.dart';
 import '../../../core/graphql/graphql_client.dart';
-import 'home_page.dart';
 import 'add_order_page.dart';
 import 'payment_page.dart';
 

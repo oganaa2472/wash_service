@@ -119,8 +119,8 @@ class _AddOrderPageState extends State<AddOrderPage> {
           carId: selectedCar!.id.startsWith('temp_') ? '0' : selectedCar!.id,
           carPlateNumber: selectedCar!.licensePlate,
           organizationId: widget.company.id,
-          selectedServiceId: selectedService!.id,
-          status: 'PENDING',
+          selectedServices: [int.parse(selectedService!.id)],
+        
           totalPrice: selectedService!.price.toString(),
           completedAt: DateTime.now().toIso8601String(),
         );
@@ -186,16 +186,17 @@ class _AddOrderPageState extends State<AddOrderPage> {
       
       // Calculate equal share for each worker
       double equalShare = baseSalaryPool / selectedWashers.length;
-      
+     
       for (final washer in selectedWashers) {
         // Calculate individual salary based on skill percentage
         double calculatedSalary = equalShare * double.parse(washer.skillPercentage) / 100;
         
+        print('Washer ID: ${washer.id}, Skill Percentage: ${washer.skillPercentage}'); 
         await employeeMutationDataSource.assignEmployeeToOrder(
           orderId: createdOrderId!,
           workId: washer.id,
-          assignedAt: DateTime.now().toIso8601String(),
-          calculatedSalary: calculatedSalary.toString(),
+          // assignedAt: DateTime.now().toIso8601String(),
+          // calculatedSalary: calculatedSalary.toString(),
         );
       }
        

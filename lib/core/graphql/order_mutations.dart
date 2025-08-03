@@ -3,8 +3,8 @@ class OrderMutations {
     required String carId,
     required String carPlateNumber,
     required String organizationId,
-    required String selectedServiceId,
-    required String status,
+    required List<int> selectedServices,
+ 
     required String totalPrice,
     required String completedAt,
   }) => '''
@@ -13,8 +13,8 @@ class OrderMutations {
         carId: $carId,
         carPlateNumber: "$carPlateNumber",
         organizationId: $organizationId,
-        selectedServiceId: $selectedServiceId,
-        status: "$status",
+        selectedService: $selectedServices,
+       
         totalPrice: "$totalPrice",
         completedAt: "$completedAt"
       }) {
