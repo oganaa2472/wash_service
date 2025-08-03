@@ -5,6 +5,24 @@ class ServiceQueries {
     name
   }
 }''';
+
+static String getUsers = '''query {
+  washEmployee {
+    id,
+    employeeId,
+    skillPercentage,
+    isActive,
+    employee {
+      id,
+      username,
+      lastName,
+      phone,
+      email,
+      isMailVerified,
+      isPhoneVerified
+    }
+  }
+}''';
 static String createWashService = '''
   mutation CreateWashService(\$name: String!, \$price: String!, \$categoryId: Int!, \$organizationId: String!) {
     washService(

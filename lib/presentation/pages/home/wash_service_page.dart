@@ -927,7 +927,7 @@ class _WashServicePageState extends State<WashServicePage> {
                         IconButton(
                           icon: const Icon(Icons.add),
                           onPressed: () {
-                            _showSnackBar("Ажилчин нэмэх");
+                            context.go('/user-list', extra: {'company': widget.company});
                           },
                         ),
                       ],
