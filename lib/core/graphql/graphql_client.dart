@@ -23,7 +23,7 @@ class GraphQLConfig {
         'User-Agent': 'MGL-Smart-Wash-App/1.0',
       },
     );
-   
+   print(token);
     final AuthLink authLink = AuthLink(
       getToken: () => token != null ? 'JWT $token' : '',
     );

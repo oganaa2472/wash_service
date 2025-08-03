@@ -65,16 +65,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       debugPrint('Raw GraphQL Response: ${result.data}');
       
-      if (result.hasException) {
-        debugPrint('GraphQL Errors: ${result.exception?.graphqlErrors}');
-        debugPrint('Network Error: ${result.exception?.linkException}');
+      // if (result.hasException) {
+      //   debugPrint('GraphQL Errors: ${result.exception?.graphqlErrors}');
+      //   debugPrint('Network Error: ${result.exception?.linkException}');
         
-        final errorMessage = result.exception?.graphqlErrors.firstOrNull?.message ??
-            result.exception?.linkException.toString() ??
-            'Failed to send OTP';
+      //   final errorMessage = result.exception?.graphqlErrors.firstOrNull?.message ??
+      //       result.exception?.linkException.toString() ??
+      //       'Failed to send OTP';
             
-        throw ServerFailure(message: errorMessage);
-      }
+      //   throw ServerFailure(message: errorMessage);
+      // }
 
       if (result.data == null) {
         debugPrint('No data received from server');
@@ -83,7 +83,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       // Verify the response structure
       if (isPhone) {
-        final phoneResponse = result.data!['phoneCode'];
+        final phoneResponse = result.data!['smsCode'];
+        print(phoneResponse.toString());
         if (phoneResponse == null || phoneResponse['phone'] == null) {
           debugPrint('Invalid phone response structure: $phoneResponse');
           throw const ServerFailure(message: 'Invalid server response for phone OTP');

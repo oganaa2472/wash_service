@@ -25,7 +25,7 @@ class AppRouter {
   static const String versionCheck = '/version-check';
 
   static GoRouter get router => GoRouter(
-    initialLocation: splash,
+    initialLocation: home,
     routes: [
       // Splash Screen
       GoRoute(
