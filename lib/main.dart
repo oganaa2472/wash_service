@@ -10,6 +10,7 @@ import 'core/router/app_router.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/localization/locale_provider.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
+import 'presentation/bloc/user/user_bloc.dart';
 import 'dart:io';
 
 void main() async {
@@ -41,6 +42,9 @@ class MyApp extends StatelessWidget {
           providers: [
             BlocProvider(
               create: (context) => locator<AuthBloc>(),
+            ),
+            BlocProvider(
+              create: (context) => locator<UserBloc>(),
             ),
           ],
           child: ChangeNotifierProvider(

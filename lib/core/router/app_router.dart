@@ -10,6 +10,7 @@ import '../../presentation/pages/home/edit_company_page.dart';
 import '../../presentation/pages/home/wash_service_page.dart';
 import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/version_check_page.dart';
+import '../../presentation/pages/user/user_list_page.dart';
 import '../../domain/entities/company.dart';
 
 class AppRouter {
@@ -21,6 +22,7 @@ class AppRouter {
   static const String addCompany = '/add-company';
   static const String editCompany = '/edit-company';
   static const String washService = '/wash-service';
+  static const String userList = '/user-list';
   static const String settings = '/settings';
   static const String versionCheck = '/version-check';
 
@@ -109,6 +111,18 @@ class AppRouter {
               point: '',
               category: null,
             ),
+          );
+        },
+      ),
+      
+      // User List Route
+      GoRoute(
+        path: userList,
+        name: 'user-list',
+        builder: (context, state) {
+          final params = state.extra as Map<String, dynamic>?;
+          return UserListPage(
+            company: params?['company'],
           );
         },
       ),

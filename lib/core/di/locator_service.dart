@@ -8,6 +8,11 @@ import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../presentation/bloc/auth/auth_bloc.dart';
+import '../../data/datasources/user_remote_data_source.dart';
+import '../../data/repositories/user_repository_impl.dart';
+import '../../domain/repositories/user_repository.dart';
+import '../../domain/usecases/get_users.dart';
+import '../../presentation/bloc/user/user_bloc.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -31,14 +36,26 @@ class LocatorService {
         prefsService: locator(),
       ),
     );
+    
+    locator.registerLazySingleton<UserRemoteDataSource>(
+      () => UserRemoteDataSourceImpl(client: locator()),
+    );
 
     // Repositories
     locator.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(remoteDataSource: locator()),
     );
+    
+    locator.registerLazySingleton<UserRepository>(
+      () => UserRepositoryImpl(remoteDataSource: locator()),
+    );
+
+    // Use Cases
+    locator.registerLazySingleton(() => GetUsers(locator()));
 
     // BLoCs
     locator.registerFactory(() => AuthBloc(authRepository: locator()));
+    locator.registerFactory(() => UserBloc(locator()));
   }
 
   static void reset() {

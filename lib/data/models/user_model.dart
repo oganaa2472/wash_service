@@ -1,16 +1,18 @@
 import '../../domain/entities/user.dart';
 
 class UserModel extends User {
-  const UserModel({
+  UserModel({
     required String? id,
     required String? username,
     required String? email,
     required String? phone,
+    required String? lastName,
   }) : super(
           id: id,
           username: username,
           email: email,
           phone: phone,
+          lastName: lastName
         );
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class UserModel extends User {
       username: json['username'] as String?,
       email: json['email'] as String?,
       phone: json['phone'] as String?,
+        lastName: json['lastName'] as String?,
     );
   }
 
@@ -31,9 +34,8 @@ class UserModel extends User {
     };
   }
 
-  // Add a method to create a UserModel from the GraphQL auth response
   factory UserModel.fromAuthResponse(Map<String, dynamic> json) {
     final userData = json['user'] as Map<String, dynamic>;
     return UserModel.fromJson(userData);
   }
-} 
+}
