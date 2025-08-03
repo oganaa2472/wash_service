@@ -239,34 +239,8 @@ class _HomePageState extends State<HomePage> {
              
         
         
-              // Update Check Button
-              Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    _checkForUpdates();
-                  },
-                  icon: const Icon(Icons.system_update, color: Colors.white),
-                ),
-              ),
-              // Logout Button
-              Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    context.read<AuthBloc>().add(LogoutEvent());
-                  },
-                  icon: const Icon(Icons.logout, color: Colors.white),
-                ),
-              ),
+            
+             
             ],
           ),
           body: AnimatedSwitcher(

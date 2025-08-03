@@ -126,16 +126,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
         return;
       }
       
-      if (!RegExp(r'^\d{6}$').hasMatch(otp)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).pleaseEnterOnlyNumbers),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
+   
+      
       
       context.read<AuthBloc>().add(
         VerifyOtpEvent(
@@ -254,12 +246,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> with SingleTi
                           child: CustomTextField(
                             controller: _controllers[index],
                             focusNode: _focusNodes[index],
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.text,
                             textAlign: TextAlign.center,
                             maxLength: 1,
                             // style: const TextStyle(fontSize: 24),
                             inputFormatters: [
-                              FilteringTextInputFormatter.singleLineFormatter,
+                              // FilteringTextInputFormatter.singleLineFormatter,
                             ],
                             onChanged: (value) {
                               if (value.isNotEmpty) {

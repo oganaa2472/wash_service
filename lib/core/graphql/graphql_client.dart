@@ -23,9 +23,9 @@ class GraphQLConfig {
         'User-Agent': 'MGL-Smart-Wash-App/1.0',
       },
     );
-   
+   print(token);
     final AuthLink authLink = AuthLink(
-      getToken: () => token != null ? 'Bearer $token' : '',
+      getToken: () => token != null ? 'JWT $token' : '',
     );
 
     final ErrorLink errorLink = ErrorLink(

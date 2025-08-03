@@ -49,6 +49,7 @@ class _AssistantViewState extends State<_AssistantView> {
     _controller.clear();
   }
 
+
   @override
   void dispose() {
     _controller.dispose();
@@ -206,6 +207,7 @@ class _AssistantViewState extends State<_AssistantView> {
                 context.go('/settings');
               },
             ),
+            
             Consumer<LocaleProvider>(
               builder: (context, localeProvider, child) {
                 return ListTile(
@@ -239,7 +241,8 @@ class _AssistantViewState extends State<_AssistantView> {
               title: const Text('Logout'),
               onTap: () {
                 Navigator.of(context).pop();
-                // context.read<AuthBloc>().add(LogoutEvent());
+                context.go('/login');
+              
               },
             ),
           ],

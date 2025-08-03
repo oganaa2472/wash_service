@@ -13,7 +13,6 @@ class AuthQueries {
   static String requestOtpPhone = '''
     mutation smsCode(\$phone: String!) {
       smsCode(phone: \$phone) {
-        __typename
         phone {
           id
         }

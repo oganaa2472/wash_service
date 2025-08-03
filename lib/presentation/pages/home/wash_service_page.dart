@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mgl_smart_service/core/graphql/service_queries.dart';
 import 'package:provider/provider.dart';
 import '../../../domain/entities/company.dart';
 import '../../../domain/entities/order.dart';
@@ -1077,9 +1079,24 @@ class _WashServicePageState extends State<WashServicePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Үйлчилгээний цэс',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Үйлчилгээний цэс',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Row(
+                          children: [
+                           
+                            IconButton(
+                              onPressed: () => _showAddServiceDialog(),
+                              icon: const Icon(Icons.add),
+                              tooltip: 'Үйлчилгээ нэмэх',
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Expanded(
@@ -1097,6 +1114,12 @@ class _WashServicePageState extends State<WashServicePage> {
                                       color: Colors.grey[600],
                                       fontWeight: FontWeight.w500,
                                     ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: () => _showAddServiceDialog(),
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Эхний үйлчилгээ нэмэх'),
                                   ),
                                 ],
                               ),
@@ -1347,6 +1370,258 @@ class _WashServicePageState extends State<WashServicePage> {
       },
     );
   }
+
+  void _showAddServiceDialog() {
+    final TextEditingController categoryNameController = TextEditingController();
+    final TextEditingController priceController = TextEditingController();
+    List<Map<String, dynamic>> availableCategories = [];
+    String selectedServiceType = ''; // Will be set to first category when loaded
+    bool isLoadingCategories = true;
+    
+    // Fetch categories from GraphQL API
+    Future<void> fetchAvailableCategories() async {
+      try {
+        final client = GraphQLConfig.initializeClient().value;
+        final result = await client.query(
+          QueryOptions(
+            document: gql(ServiceQueries.getCategory),
+            fetchPolicy: FetchPolicy.networkOnly,
+          ),
+        );
+
+        if (result.hasException) {
+          print('Error fetching categories: ${result.exception}');
+          availableCategories = [];
+        } else {
+          final data = result.data;
+          if (data != null && data['washCategory'] != null) {
+            availableCategories = List<Map<String, dynamic>>.from(
+              data['washCategory'].map((category) => {
+                'id': category['id'].toString(),
+                'name': category['name'].toString(),
+              })
+            );
+            // Set default selection to first category
+            if (availableCategories.isNotEmpty) {
+              selectedServiceType = availableCategories.first['id'];
+            }
+          }
+        }
+      } catch (e) {
+        print('Exception fetching categories: $e');
+        availableCategories = [];
+      }
+    }
+    final List<String> predefinedCategories = [
+      'fast wash',
+      'deep clean',
+      'premium service',
+      'full service',
+      'special service',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Fetch available categories when dialog opens
+            if (isLoadingCategories) {
+              fetchAvailableCategories().then((_) {
+                if (mounted) {
+                  setState(() {
+                    isLoadingCategories = false;
+                  });
+                }
+              });
+            }
+            
+            return AlertDialog(
+              title: Row(
+                children: [
+                  const Icon(Icons.design_services, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  const Text('Нэмэх'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Үйлчилгээний хэмжээ:',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    // Show loading or categories
+                    if (isLoadingCategories)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else if (availableCategories.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.orange[200]!),
+                        ),
+                        child: const Text(
+                          'Ангилал олдсонгүй. Эхлээд ангилал нэмнэ үү.',
+                          style: TextStyle(color: Colors.orange),
+                        ),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: availableCategories.map((category) {
+                          final isSelected = selectedServiceType == category['id'];
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedServiceType = category['id'];
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: isSelected ? Colors.blue : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected ? Colors.blue : Colors.grey,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.category,
+                                    color: isSelected ? Colors.white : Colors.grey[600],
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    category['name'],
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: categoryNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Ангиллын нэр',
+                        hintText: 'Жишээ: fast wash, deep clean',
+                        prefixIcon: const Icon(Icons.category),
+                        helperText: 'Санал болгох: ${predefinedCategories.join(", ")}',
+                        helperMaxLines: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: priceController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Үнэ',
+                        hintText: 'Жишээ: 25000',
+                        prefixIcon: Icon(Icons.attach_money),
+                        suffixText: '₮',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Цуцлах'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (categoryNameController.text.trim().isEmpty) {
+                      _showSnackBar('Ангиллын нэрийг оруулна уу');
+                      return;
+                    }
+                    
+                    if (priceController.text.trim().isEmpty) {
+                      _showSnackBar('Үнийг оруулна уу');
+                      return;
+                    }
+                    
+                    // Validate price is a valid number
+                    final price = double.tryParse(priceController.text.trim());
+                    if (price == null || price <= 0) {
+                      _showSnackBar('Зөв үнэ оруулна уу');
+                      return;
+                    }
+                    
+                    if (selectedServiceType.isEmpty) {
+                      _showSnackBar('Ангилал сонгоно уу');
+                      return;
+                    }
+                    
+                    try {
+                      // Show loading
+                      Navigator.of(context).pop();
+                      _showSnackBar('Үйлчилгээ нэмж байна...');
+                      
+                      // Call GraphQL mutation to create wash service
+                      final client = GraphQLConfig.initializeClient().value;
+                      final result = await client.mutate(
+                        MutationOptions(
+                          document: gql(ServiceQueries.createWashService),
+                          variables: {
+                            'name': categoryNameController.text.trim(),
+                            'price': price,
+                            'categoryId': int.parse(selectedServiceType),
+                            'organizationId': widget.company.id,
+                          },
+                        ),
+                      );
+                      
+                      if (result.hasException) {
+                        _showSnackBar('Алдаа гарлаа: ${result.exception.toString()}');
+                        return;
+                      }
+                      
+                      // Success
+                      _showSnackBar('"${categoryNameController.text}" үйлчилгээ "${price.toStringAsFixed(0)}₮ үнээр амжилттай нэмэгдлээ!');
+                      
+                      // Refresh the services list by triggering a rebuild of the services tab
+                      if (index == 4) { // If currently on services tab
+                        setState(() {
+                          // This will trigger a rebuild of the BLoC and refresh the services
+                        });
+                      }
+                      
+                    } catch (e) {
+                      _showSnackBar('Алдаа гарлаа: $e');
+                    }
+                  },
+                  child: const Text('Нэмэх'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  
 }
 
 class _ServiceCard extends StatelessWidget {
@@ -1410,4 +1685,4 @@ class _ServiceCard extends StatelessWidget {
       ),
     );
   }
-} 
+}
