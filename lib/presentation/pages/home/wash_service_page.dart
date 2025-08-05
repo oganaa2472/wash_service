@@ -468,107 +468,123 @@ class _WashServicePageState extends State<WashServicePage> {
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Row(
+        child: Column(
           children: [
-            // Leading icon
-            CircleAvatar(
-              backgroundColor: Colors.blue.shade50,
-              child: const Icon(Icons.local_car_wash, color: Colors.blue),
-            ),
-            const SizedBox(width: 12),
-            
-            // Main content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Захиалга #${order.id}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text('${order.selectedService.name} • ${order.carPlateNumber}'),
-                  Text(
-                    '₮${order.totalPrice} • ${_formatDate(order.orderDate)}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Trailing status and payment button
-            Column(
-              mainAxisSize: MainAxisSize.min,
+            Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isCompleted ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    isCompleted ? 'Дууссан' : 'Хийгдэж байна',
-                    style: TextStyle(
-                      color: isCompleted ? Colors.green : Colors.orange,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 9,
-                    ),
+                // Leading icon
+                CircleAvatar(
+                  backgroundColor: Colors.blue.shade50,
+                  child: const Icon(Icons.local_car_wash, color: Colors.blue),
+                ),
+                const SizedBox(width: 12),
+                
+                // Main content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Захиалга #${order.id}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('${order.selectedService.name} • ${order.carPlateNumber}'),
+                      Text(
+                        '₮${order.totalPrice} • ${_formatDate(order.orderDate)}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isPaid ? Colors.blue.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    isPaid ? 'Төлөгдсөн' : 'Төлөгдөөгүй',
-                    style: TextStyle(
-                      color: isPaid ? Colors.blue : Colors.red,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 9,
+                
+                // Trailing status and payment button
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isCompleted ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isCompleted ? 'Дууссан' : 'Хийгдэж байна',
+                        style: TextStyle(
+                          color: isCompleted ? Colors.green : Colors.orange,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 9,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isPaid ? Colors.blue.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isPaid ? 'Төлөгдсөн' : 'Төлөгдөөгүй',
+                        style: TextStyle(
+                          color: isPaid ? Colors.blue : Colors.red,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ),
+                   
+                
+                  ],
                 ),
-                if (!isPaid) ...[
-                  const SizedBox(height: 4),
-                  SizedBox(
-                    height: 24,
-                    child: ElevatedButton(
-                      onPressed: () => _showPaymentDialog(order),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: const Size(50, 20),
-                      ),
-                      child: const Text(
-                        'Төлөх',
-                        style: TextStyle(fontSize: 9, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-                if (!isCompleted) ...[
-                  const SizedBox(height: 4),
-                  SizedBox(
-                    height: 24,
-                    child: ElevatedButton(
-                      onPressed: () => _completeOrder(order),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: const Size(50, 20),
-                      ),
-                      child: const Text(
-                        'Дуусгах',
-                        style: TextStyle(fontSize: 9, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
+            Row(
+               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+ 
+   crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+
+                    if (!isPaid) ...[
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        height: 24,
+                        child: ElevatedButton(
+                          onPressed: () => _showPaymentDialog(order),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            minimumSize: const Size(50, 20),
+                          ),
+                          child: const Text(
+                            'Төлөх',
+                            style: TextStyle(fontSize: 9, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+
+                        if (!isCompleted) ...[
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        height: 24,
+                        child: ElevatedButton(
+                          onPressed: () => _completeOrder(order),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            minimumSize: const Size(50, 20),
+                          ),
+                          child: const Text(
+                            'Цуцлах',
+                            style: TextStyle(fontSize: 9, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+              ],
+            ),
+         
           ],
         ),
       ),
