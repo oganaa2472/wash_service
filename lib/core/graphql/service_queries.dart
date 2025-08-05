@@ -7,20 +7,11 @@ class ServiceQueries {
 }''';
 
 static String getUsers = '''query {
-  washEmployee {
-    id,
-    employeeId,
-    skillPercentage,
-    isActive,
-    employee {
-      id,
-      username,
-      lastName,
-      phone,
-      email,
-      isMailVerified,
-      isPhoneVerified
-    }
+  users {
+    username,
+    lastName,
+    phone,
+    email
   }
 }''';
 static String createWashService = '''

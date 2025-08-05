@@ -34,27 +34,19 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       }
 
       print('UserRemoteDataSource: Raw data: ${result.data}');
-      final List<dynamic> washEmployeeData = result.data?['washEmployee'] ?? [];
-      print('UserRemoteDataSource: WashEmployee data length: ${washEmployeeData.length}');
+      final List<dynamic> usersData = result.data?['users'] ?? [];
+      print('UserRemoteDataSource: Users data length: ${usersData.length}');
       
-      final users = washEmployeeData.map((washEmployeeItem) {
-        print('UserRemoteDataSource: Processing washEmployee data: $washEmployeeItem');
-        final employeeData = washEmployeeItem['employee'];
-        print('UserRemoteDataSource: Employee data: $employeeData');
-        
-        if (employeeData == null) {
-          print('UserRemoteDataSource: No employee data found, skipping');
-          return null;
-        }
-        
+      final users = usersData.map((userData) {
+        print('UserRemoteDataSource: Processing user data: $userData');
         return User(
-          id: employeeData['id']?.toString(),
-          username: employeeData['username']?.toString(),
-          lastName: employeeData['lastName']?.toString(),
-          email: employeeData['email']?.toString(),
-          phone: employeeData['phone']?.toString(),
+          id: userData['id']?.toString(),
+          username: userData['username']?.toString(),
+          lastName: userData['lastName']?.toString(),
+          email: userData['email']?.toString(),
+          phone: userData['phone']?.toString(),
         );
-      }).where((user) => user != null).cast<User>().toList();
+      }).toList();
       
       print('UserRemoteDataSource: Returning ${users.length} users');
       return users;
