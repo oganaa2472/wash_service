@@ -9,8 +9,8 @@ class EmployeeMutationDataSource {
   Future<String> assignEmployeeToOrder({
     required String orderId,
     required String workId,
-    required String assignedAt,
-    required String calculatedSalary,
+    // required String assignedAt,
+    // required String calculatedSalary,
   }) async {
     try {
       final result = await client.mutate(
@@ -18,8 +18,8 @@ class EmployeeMutationDataSource {
           document: gql(EmployeeMutations.assignEmployeeToOrder(
             orderId: orderId,
             workId: workId,
-            assignedAt: assignedAt,
-            calculatedSalary:calculatedSalary    
+            // assignedAt: assignedAt,
+            // calculatedSalary:calculatedSalary    
           )),
         ),
       );

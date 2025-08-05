@@ -59,10 +59,10 @@ class AuthQueries {
   ''';
 
   static String getCompaniesByCategory = '''
-    query company(
+    query company( 
       \$searchBy: [String!]
     ) {
-      company(searchBy: \$searchBy) {
+      company(washer: true, searchBy: \$searchBy) {
         id
         name
         logo

@@ -1,3 +1,18 @@
+// Импорт заавал хэрэгтэй
+import java.util.Properties
+import java.io.FileInputStream
+
+// keystore.properties файлыг ачаалж байна
+val keystoreProperties = Properties().apply {
+    val keystoreFile = rootProject.file("key.properties")
+    if (keystoreFile.exists()) {
+        load(FileInputStream(keystoreFile))
+    } else {
+        println("⚠️ key.properties файл олдсонгүй!")
+    }
+}
+
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -6,7 +21,8 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mgl_smart_service"
+    namespace = "mn.smart.smart_driver"
+
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +37,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.mgl_smart_service"
+        applicationId = "mn.smart.smart_driver"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -30,11 +46,21 @@ android {
         versionName = flutter.versionName
     }
 
+ signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+        getByName("release") {
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release")
+           // proguardFiles(getFile("${project(":flutter_background_geolocation").projectDir}/proguard-rules.pro"))
+          // proguardFiles(file("${project(":flutter_background_geolocation").projectDir}/proguard-rules.pro"))
+
         }
     }
 }

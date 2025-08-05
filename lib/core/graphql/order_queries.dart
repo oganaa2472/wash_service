@@ -6,9 +6,25 @@ class OrderQueries {
         organizationId,
         carId,
         carPlateNumber,
-        selectedService{
-          name
-        },
+      selectedService {
+            totalCount
+            edgeCount
+            edges {
+                cursor
+                node {
+                    id
+                    organizationId
+                    name
+                    description
+                    price
+                    order
+                    isActive
+                    createdAt
+                    deleteDate
+                    updatedAt
+                }
+            }
+        }
         totalPrice,
         status,
         paymentStatus,

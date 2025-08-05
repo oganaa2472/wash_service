@@ -1,4 +1,4 @@
-package com.example.mgl_smart_service
+package mn.smart.smart_driver
 
 import io.flutter.embedding.android.FlutterActivity
 

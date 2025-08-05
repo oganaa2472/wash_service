@@ -9,6 +9,7 @@ class OrderRemoteDataSource {
 
   Future<List<OrderModel>> getWashCarOrders(String companyId) async {
     try {
+   print('----companyId , $companyId');
       final result = await client.query(
         QueryOptions(
           document: gql(OrderQueries.getWashCarOrders(companyId)),
@@ -21,6 +22,7 @@ class OrderRemoteDataSource {
       }
 
       final data = result.data;
+   
       if (data == null || data['washCarOrder'] == null) {
         return [];
       }
