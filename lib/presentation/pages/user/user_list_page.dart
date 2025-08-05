@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/entities/company.dart';
 import '../../bloc/user/user_bloc.dart';
 import '../../bloc/user/user_event.dart';
 import '../../bloc/user/user_state.dart';
+import '../../../core/graphql/service_queries.dart';
 
 class UserListPage extends StatefulWidget {
   final Company? company;
@@ -27,6 +29,104 @@ class _UserListPageState extends State<UserListPage> {
     // Fetch users when page loads
     context.read<UserBloc>().add(const FetchUsers());
     print('UserListPage: FetchUsers event dispatched');
+  }
+
+  void _showAddEmployeeDialog(User user) {
+    final TextEditingController skillController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Ажилтан нэмэх - ${user.username} ${user.lastName ?? ''}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Хувь хэмжээ оруулна уу (0-100):'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: skillController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Ур чадварын хувь',
+                  suffixText: '%',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Цуцлах'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final skillPercentage = skillController.text.trim();
+                if (skillPercentage.isNotEmpty) {
+                  Navigator.of(context).pop();
+                  _addEmployee(user.id!, skillPercentage);
+                }
+              },
+              child: const Text('Нэмэх'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addEmployee(String employeeId, String skillPercentage) async {
+    if (widget.company?.id == null) {
+      _showErrorSnackBar('Компанийн мэдээлэл олдсонгүй');
+      return;
+    }
+
+    try {
+      final GraphQLClient client = GraphQLProvider.of(context).value;
+      
+      final MutationOptions options = MutationOptions(
+        document: gql(ServiceQueries.addWashEmployee),
+        variables: {
+          'organizationId': widget.company!.id,
+          'employeeId': int.parse(employeeId),
+          'skillPercentage': skillPercentage.toString(),
+        },
+      );
+
+      final QueryResult result = await client.mutate(options);
+
+      if (result.hasException) {
+        print('Add employee error: ${result.exception.toString()}');
+        _showErrorSnackBar('Ажилтан нэмэхэд алдаа гарлаа: ${result.exception.toString()}');
+      } else {
+        print('Employee added successfully: ${result.data}');
+        _showSuccessSnackBar('Ажилтан амжилттай нэмэгдлээ');
+        // Refresh the user list
+        context.read<UserBloc>().add(const FetchUsers());
+      }
+    } catch (e) {
+      print('Add employee exception: $e');
+      _showErrorSnackBar('Ажилтан нэмэхэд алдаа гарлаа: $e');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override
@@ -166,10 +266,19 @@ class _UserListPageState extends State<UserListPage> {
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey[400],
+                  ElevatedButton(
+                    onPressed: () => _showAddEmployeeDialog(user),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      'Ажилтан нэмэх',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
                 ],
               ),
