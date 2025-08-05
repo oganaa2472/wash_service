@@ -60,6 +60,30 @@ static String createWashService = '''
   }
 ''';
 
+static String addWashEmployee = '''
+  mutation AddWashEmployee(\$organizationId: Int!, \$employeeId: Int!, \$skillPercentage: Decimal!) {
+    washEmployee(
+      input: {
+        organizationId: \$organizationId,
+        employeeId: \$employeeId,
+        skillPercentage: \$skillPercentage
+      }
+    ) {
+      organizationEmployee {
+        id
+        organizationId
+        employeeId
+        fullName
+        skillPercentage
+        salaryInfo
+        isActive
+        joinedAt
+        leftAt
+      }
+    }
+  }
+''';
+
   static String getWashServices(String companyId) => '''
     query WashService {
       washService(searchBy:["organization_id=$companyId"]) {
