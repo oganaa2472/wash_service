@@ -12,8 +12,8 @@ class OrderMutationDataSource {
     required String organizationId,
     required List<int> selectedServices,
   
-    required String totalPrice,
-    required String completedAt,
+    // required String totalPrice,
+    // required String completedAt,
   }) async {
     try {
       final result = await client.mutate(
@@ -24,8 +24,8 @@ class OrderMutationDataSource {
             organizationId: organizationId,
             selectedServices: selectedServices,
             
-            totalPrice: totalPrice,
-            completedAt: completedAt,
+            // totalPrice: totalPrice,
+            // completedAt: completedAt,
           )),
         ),
       );

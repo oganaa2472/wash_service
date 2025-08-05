@@ -222,7 +222,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const Text(
-                      'John Doe',
+                      'Zulaa',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,

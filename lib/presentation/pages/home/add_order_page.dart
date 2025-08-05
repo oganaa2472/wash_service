@@ -121,8 +121,8 @@ class _AddOrderPageState extends State<AddOrderPage> {
           organizationId: widget.company.id,
           selectedServices: [int.parse(selectedService!.id)],
         
-          totalPrice: selectedService!.price.toString(),
-          completedAt: DateTime.now().toIso8601String(),
+          // totalPrice: selectedService!.price.toString(),
+          // completedAt: DateTime.now().toIso8601String(),
         );
         
         createdOrderId = orderId;

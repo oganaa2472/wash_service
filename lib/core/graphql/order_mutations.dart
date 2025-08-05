@@ -5,8 +5,8 @@ class OrderMutations {
     required String organizationId,
     required List<int> selectedServices,
  
-    required String totalPrice,
-    required String completedAt,
+    // required String totalPrice,
+    // required String completedAt,
   }) => '''
     mutation WashCarOrder {
       washCarOrder(input: {
@@ -15,8 +15,7 @@ class OrderMutations {
         organizationId: $organizationId,
         selectedService: $selectedServices,
        
-        totalPrice: "$totalPrice",
-        completedAt: "$completedAt"
+       
       }) {
         carWashOrder {
           id
