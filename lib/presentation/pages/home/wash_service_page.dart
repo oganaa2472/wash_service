@@ -943,7 +943,16 @@ class _WashServicePageState extends State<WashServicePage> {
                         IconButton(
                           icon: const Icon(Icons.add),
                           onPressed: () {
-                            context.go('/user-list', extra: {'company': widget.company});
+                            print('+ Button clicked!');
+                            print('Company: ${widget.company.name}');
+                            print('Navigating to /user-list');
+                            try {
+                              context.go('/user-list', extra: {'company': widget.company});
+                              print('Navigation successful');
+                            } catch (e) {
+                              print('Navigation error: $e');
+                              _showSnackBar('Navigation error: $e');
+                            }
                           },
                         ),
                       ],
@@ -1601,8 +1610,8 @@ class _WashServicePageState extends State<WashServicePage> {
                           document: gql(ServiceQueries.createWashService),
                           variables: {
                             'name': categoryNameController.text.trim(),
-                            'price': price,
-                            'categoryId': int.parse(selectedServiceType),
+                            'price': price.toString(),
+                            'categoryId': (selectedServiceType),
                             'organizationId': widget.company.id,
                           },
                         ),
@@ -1616,12 +1625,17 @@ class _WashServicePageState extends State<WashServicePage> {
                       // Success
                       _showSnackBar('"${categoryNameController.text}" үйлчилгээ "${price.toStringAsFixed(0)}₮ үнээр амжилттай нэмэгдлээ!');
                       
+                      // Close the dialog first
+                      Navigator.of(context).pop();
+                      
                       // Refresh the services list by triggering a rebuild of the services tab
-                      if (index == 4) { // If currently on services tab
-                        setState(() {
-                          // This will trigger a rebuild of the BLoC and refresh the services
-                        });
-                      }
+                      setState(() {
+                        // This will trigger a rebuild of the services tab and create a new BLoC instance
+                        // which will automatically fetch the updated services list
+                      });
+                      
+                      // If currently on services tab, the rebuild will show the new service
+                      // If on another tab, switching to services tab will show the updated list
                       
                     } catch (e) {
                       _showSnackBar('Алдаа гарлаа: $e');

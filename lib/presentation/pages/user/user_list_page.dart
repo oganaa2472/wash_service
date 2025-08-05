@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../domain/entities/user.dart';
@@ -33,7 +34,7 @@ class _UserListPageState extends State<UserListPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Ажилдын жагсаалт',
+          'Wash List',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -42,6 +43,12 @@ class _UserListPageState extends State<UserListPage> {
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            context.go('/home');
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
