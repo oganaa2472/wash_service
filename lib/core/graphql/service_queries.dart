@@ -6,16 +6,26 @@ class ServiceQueries {
   }
 }''';
 
-static String getUsers = '''query {
-  users {
-    username,
-    lastName,
-    phone,
-    email
-  }
+static String getUsers = '''query Users {
+    users(skip: 0, first: 10) {
+        id
+        lastLogin
+        username
+        firstName
+        lastName
+        email
+        isStaff
+        isActive
+        dateJoined
+        phone
+        isPhoneVerified
+        isMailVerified
+        password
+        isSuperuser
+    }
 }''';
 static String createWashService = '''
-  mutation CreateWashService(\$name: String!, \$price: String!, \$categoryId: Int!, \$organizationId: String!) {
+  mutation CreateWashService(\$name: String!, \$price: Decimal!, \$categoryId: ID!, \$organizationId: Int!) {
     washService(
       input: {
         name: \$name,
@@ -24,25 +34,27 @@ static String createWashService = '''
         organizationId: \$organizationId
       }
     ) {
-      id
-      organizationId
-      name
-      description
-      price
-      order
-      isActive
-      createdAt
-      deleteDate
-      updatedAt
-      category {
+      washService {
         id
+        organizationId
         name
         description
+        price
         order
-        carInfo
+        isActive
         createdAt
         deleteDate
         updatedAt
+        category {
+          id
+          name
+          description
+          order
+          carInfo
+          createdAt
+          deleteDate
+          updatedAt
+        }
       }
     }
   }

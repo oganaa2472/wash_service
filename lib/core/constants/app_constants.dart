@@ -3,7 +3,7 @@ class AppConstants {
   static const String appTagline = 'Your Smart Washing Solution';
   
   // API endpoints
-  static const String graphqlEndpoint = 'https://adminmember.dun.mn/mn/graphql/';  // Example URL
+  static const String graphqlEndpoint = 'https://system.xxk.app/en/graphql/';  // Example URL
   
   static const String photoEndpoint = 'https://adminmember.dun.mn/mn/media/';  // Example URL
   

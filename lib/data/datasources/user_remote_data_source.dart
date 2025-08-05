@@ -24,7 +24,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
           fetchPolicy: FetchPolicy.networkOnly,
         ),
       );
-
+      print(result.data);
       print('UserRemoteDataSource: Query completed');
       print('UserRemoteDataSource: Has exception: ${result.hasException}');
       

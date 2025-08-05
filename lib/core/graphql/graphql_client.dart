@@ -25,7 +25,11 @@ class GraphQLConfig {
     );
    print(token);
     final AuthLink authLink = AuthLink(
-      getToken: () => token != null ? 'JWT $token' : '',
+      getToken: () {
+        final authToken = token != null ? 'JWT $token' : '';
+        // print('GraphQL Auth Token (getClient): $authToken');
+        return authToken;
+      },
     );
 
     final ErrorLink errorLink = ErrorLink(
@@ -102,7 +106,10 @@ class GraphQLConfig {
       getToken: () async {
         final SharedPreferences prefs = await SharedPreferences.getInstance();
         final String? token = prefs.getString('auth_token');
-        return token != null ? 'Bearer $token' : '';
+        final authToken = token != null ? 'JWT $token' : '';
+        print('GraphQL Auth Token (initializeClient): $authToken');
+        print('Raw token from SharedPreferences: $token');
+        return authToken;
       },
     );
 
